@@ -23,11 +23,11 @@ module Trestle
     end
 
     def primary_key?
-      name.to_s == admin.model.primary_key
+      name.to_s == admin.model.primary_key.to_s
     end
 
     def inheritance_column?
-      name.to_s == admin.model.inheritance_column
+      name.to_s == admin.model.try(:inheritance_column)
     end
 
     def counter_cache?

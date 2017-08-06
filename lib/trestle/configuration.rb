@@ -8,7 +8,7 @@ module Trestle
     option :site_logo
     option :site_logo_small
 
-    option :path, "/admin"
+    option :path, '/admin'
     option :automount, true
 
     option :turbolinks, defined?(Turbolinks)
@@ -17,7 +17,7 @@ module Trestle
 
     option :persistent_params, [:sort, :order, :scope]
 
-    option :default_adapter, Adapters::Adapter.compose(Adapters::ActiveRecordAdapter, Adapters::DraperAdapter)
+    option :default_adapter, Adapters::Adapter.compose(Adapters::ActiveRecordAdapter, Adapters::DraperAdapter, Adapters::SequelAdapter)
 
     option :root_breadcrumbs, -> { [Trestle::Breadcrumb.new(I18n.t("admin.breadcrumbs.home", default: "Home"), Trestle.config.path)] }
 

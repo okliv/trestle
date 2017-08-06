@@ -5,6 +5,7 @@ require "active_support/all"
 require "sass-rails"
 require "autoprefixer-rails"
 require "kaminari"
+require "philtre"
 
 module Trestle
   extend ActiveSupport::Autoload
@@ -57,4 +58,4 @@ module Trestle
   end
 end
 
-require "trestle/engine" if defined?(Rails)
+require 'trestle/engine' if defined?(Rails)

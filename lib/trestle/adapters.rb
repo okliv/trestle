@@ -4,6 +4,7 @@ module Trestle
 
     autoload :ActiveRecordAdapter
     autoload :DraperAdapter
+    autoload :SequelAdapter
 
     class Adapter
       attr_reader :admin
