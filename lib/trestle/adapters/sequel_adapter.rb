@@ -54,9 +54,9 @@ module Trestle
 
       def default_attributes
         reflections = admin.model.association_reflections
-        admin.model.db_schema.map do |column_name, column_attrs|
+        admin.model.db_schema.reject{|k,v| k.to_s.end_with?('_id')}.map do |column_name, column_attrs|
           if reflection = reflections[column_name]
-            Attribute::Association.new(admin, column_name, reflection.to_h[:orig_opts][:class_name].safe_constantize)
+            Attribute::Association.new(admin, "#{column_name}_id".to_sym, reflection.to_h[:orig_opts][:class_name].safe_constantize)
           else
             Attribute.new(admin, column_name, column_attrs[:type])
           end
