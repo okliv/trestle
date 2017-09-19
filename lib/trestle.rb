@@ -25,6 +25,7 @@ module Trestle
   autoload :Resource
   autoload :Scope
   autoload :Tab
+  autoload :Panel
   autoload :Table
 
   mattr_accessor :admins
