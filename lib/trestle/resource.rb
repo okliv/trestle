@@ -39,10 +39,12 @@ module Trestle
       adapter_method :decorate_collection
       adapter_method :unscope
       adapter_method :merge_scopes
+      adapter_method :count
       adapter_method :sort
       adapter_method :paginate
-      adapter_method :count
-      adapter_method :default_attributes
+      adapter_method :human_attribute_name
+      adapter_method :default_table_attributes
+      adapter_method :default_form_attributes
 
       attr_accessor :decorator
 
@@ -95,9 +97,7 @@ module Trestle
         return collection unless params[:sort]
 
         field = params[:sort].to_sym
-
-        order = params[:order].downcase
-        order = "asc" unless %w(asc desc).include?(order)
+        order = params[:order].to_s.downcase == "desc" ? :desc : :asc
 
         if column_sorts.has_key?(field)
           instance_exec(collection, order, &column_sorts[field])
@@ -119,15 +119,15 @@ module Trestle
       end
 
       def model_name
-        options[:as] || default_model_name
+        @model_name ||= Trestle::ModelName.new(model)
       end
 
       def readonly?
         options[:readonly]
       end
 
-      def breadcrumb
-        Breadcrumb.new(model_name.pluralize, path)
+      def default_breadcrumb
+        Breadcrumb.new(I18n.t("admin.breadcrumbs.#{admin_name}", default: model_name.plural.titleize), path)
       end
 
       def routes
@@ -148,12 +148,7 @@ module Trestle
       def infer_model_class
         parent.const_get(admin_name.classify)
       rescue NameError
-        nil
-      end
-
-      def default_model_name
-        model_name = model.model_name
-        model_name.respond_to?(:human) ? model_name.human : model_name.to_s.titleize
+        raise NameError, "Unable to find model #{admin_name.classify}. Specify a different model using Trestle.resource(:#{admin_name}, model: MyModel)"
       end
     end
   end

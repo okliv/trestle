@@ -11,7 +11,7 @@
 
 > A modern, responsive admin framework for Ruby on Rails
 
-<img src="https://trestle.io/images/Trestle-Screenshot-1.png?" width="50%" /><img src="https://trestle.io/images/Trestle-Screenshot-2.png?" width="50%" />
+<img src="https://trestle.io/images/Trestle-Screenshot-1-1x.png?" width="50%" /><img src="https://trestle.io/images/Trestle-Screenshot-2-1x.png?" width="50%" />
 
 
 ## Getting Started
@@ -92,6 +92,7 @@ The following plugins are currently available:
 | *trestle-auth* | User authentication plugin | https://github.com/TrestleAdmin/trestle-auth |
 | *trestle-search* | Search plugin | https://github.com/TrestleAdmin/trestle-search |
 | *trestle-tinymce* | TinyMCE (WYSIWYG editor) integration | https://github.com/TrestleAdmin/trestle-tinymce |
+| *trestle-simplemde* | SimpleMDE (Markdown editor) integration | https://github.com/TrestleAdmin/trestle-simplemde |
 
 
 ## License

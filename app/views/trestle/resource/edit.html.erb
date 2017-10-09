@@ -1,4 +1,4 @@
-<% title = I18n.t("admin.titles.edit", default: "Editing %{model_name}", model_name: admin.model_name, pluralized_model_name: admin.model_name.pluralize) %>
+<% title = t("admin.titles.edit", default: "Editing %{model_name}", model_name: admin.model_name.titleize, pluralized_model_name: admin.model_name.plural.titleize) %>
 
 <% content_for(:title, title) %>
 <% breadcrumb title %>
@@ -13,6 +13,6 @@
   <% end unless admin.readonly? %>
 <% end %>
 
-<%= trestle_form_for instance, url: admin.readonly? ? "#" : admin.path(:update, id: admin.to_param(instance)), remote: request.xhr?, authenticity_token: true do |f| %>
+<%= trestle_form_for instance, url: admin.readonly? ? "#" : admin.path(:update, id: admin.to_param(instance)), method: :patch, remote: request.xhr?, authenticity_token: true do |f| %>
   <%= render partial: "form", layout: "layout" %>
 <% end %>

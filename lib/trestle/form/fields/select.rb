@@ -7,7 +7,7 @@ module Trestle
         def initialize(builder, template, name, choices=nil, options={}, html_options={}, &block)
           super(builder, template, name, options, &block)
 
-          @choices = Choices.new(choices)
+          @choices = Choices.new(choices || builder.object.send(name))
           @html_options = default_html_options.merge(html_options)
         end
 
@@ -16,7 +16,7 @@ module Trestle
         end
 
         def default_html_options
-          Trestle::Options.new(class: ["form-control"])
+          Trestle::Options.new(class: ["form-control"], data: { enable_select2: true })
         end
 
         # Allows an array of model instances (or a scope) to be

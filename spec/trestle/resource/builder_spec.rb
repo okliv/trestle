@@ -1,10 +1,9 @@
 require 'spec_helper'
 
-class Trestle::ApplicationController < ActionController::Base; end
-
 describe Trestle::Resource::Builder do
   before(:each) do
     Object.send(:remove_const, :TestAdmin) if Object.const_defined?(:TestAdmin)
+    stub_const("Trestle::ApplicationController", Class.new(ActionController::Base))
   end
 
   it "creates a top-level Resource subclass" do
@@ -67,8 +66,18 @@ describe Trestle::Resource::Builder do
     end
   end
 
-  describe "#instance" do
+  describe "#find_instance" do
     it "sets an explicit instance block" do
+      Trestle::Resource::Builder.build(:test) do
+        find_instance do |params|
+          params[:id]
+        end
+      end
+
+      expect(::TestAdmin.find_instance(id: 123)).to eq(123)
+    end
+
+    it "is aliased as #instance" do
       Trestle::Resource::Builder.build(:test) do
         instance do |params|
           params[:id]
@@ -175,8 +184,8 @@ describe Trestle::Resource::Builder do
       end
 
       collection = double
-      expect(collection).to receive(:order).with(name: "asc").and_return([1, 2, 3])
-      expect(::TestAdmin.sort(collection, :name, "asc")).to eq([1, 2, 3])
+      expect(collection).to receive(:order).with(name: :asc).and_return([1, 2, 3])
+      expect(::TestAdmin.sort(collection, :name, :asc)).to eq([1, 2, 3])
     end
   end
 
@@ -189,7 +198,7 @@ describe Trestle::Resource::Builder do
       end
 
       collection = double
-      expect(collection).to receive(:order).with(field: "asc").and_return([1, 2, 3])
+      expect(collection).to receive(:order).with(field: :asc).and_return([1, 2, 3])
       expect(::TestAdmin.apply_sorting(collection, sort: "field", order: "asc")).to eq([1, 2, 3])
     end
   end

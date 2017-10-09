@@ -1,21 +1,21 @@
 en:
   trestle:
-    title: Trestle Admin
-    footer: Powered by Trestle
-    version: Version
+    title: "Trestle Admin"
+    footer: "Powered by Trestle"
+    version: "Version"
 
     flash:
       success:
         title: "Success!"
-        create: "The %{model_name} was successfully created."
-        update: "The %{model_name} was successfully updated."
-        destroy: "The %{model_name} was successfully deleted."
+        create: "The %{lowercase_model_name} was successfully created."
+        update: "The %{lowercase_model_name} was successfully updated."
+        destroy: "The %{lowercase_model_name} was successfully deleted."
 
       failure:
         title: "Warning!"
         create: "Please correct the errors below."
         update: "Please correct the errors below."
-        destroy: "Could not delete %{model_name}."
+        destroy: "Could not delete %{lowercase_model_name}."
 
     helpers:
       page_entries_info:
@@ -28,26 +28,42 @@ en:
         more_pages:
           display_entries: "Displaying %{entry_name} <strong>%{first}&nbsp;-&nbsp;%{last}</strong> of <b>%{total}</b>"
 
+    onboarding:
+      welcome: "Welcome to Trestle"
+      no_admins: "To begin, please create an admin within <code>app/admin</code>."
+      no_template: "To customize this template, please create <code>%{path}</code>."
+      no_form: "Please define a form block or create a <code>_form.html</code> partial."
+
   admin:
     titles:
-      index: Listing %{pluralized_model_name}
-      edit: Editing %{model_name}
+      index: "Listing %{pluralized_model_name}"
+      new: "New %{model_name}"
+      edit: "Editing %{model_name}"
 
     buttons:
-      save: Save %{model_name}
-      delete: Delete %{model_name}
+      new: "New %{model_name}"
+      save: "Save %{model_name}"
+      delete: "Delete %{model_name}"
 
     breadcrumbs:
-      home: Home
+      home: "Home"
 
     table:
       headers:
-        id: ID
+        id: "ID"
 
-      column:
-        blank: None
+    form:
+      select:
+        prompt: "- Select %{attribute_name} -"
 
     confirmation:
-      title: Are you sure?
-      delete: Delete
-      cancel: Cancel
+      title: "Are you sure?"
+      delete: "Delete"
+      cancel: "Cancel"
+
+    ui:
+      toggle_navigation: "Toggle navigation"
+      toggle_sidebar: "Toggle sidebar"
+
+    format:
+      blank: "None"

@@ -9,6 +9,8 @@ module Trestle
       class_attribute :controller
       self.controller = Controller
 
+      delegate :helper, :before_action, :after_action, :around_action, to: :@controller
+
       def initialize(name, options={})
         # Create admin subclass
         @admin = Class.new(admin_class)
@@ -50,16 +52,19 @@ module Trestle
       end
 
       def controller(&block)
-        @controller.class_eval(&block)
+        @controller.class_eval(&block) if block_given?
+        @controller
       end
 
       def routes(&block)
         @admin.additional_routes = block
       end
 
-      def helper(*helpers, &block)
-        controller do
-          helper *helpers, &block
+      def breadcrumb(label=nil, path=nil, &block)
+        if block_given?
+          @admin.breadcrumb = block
+        else
+          @admin.breadcrumb = -> { Breadcrumb.new(label, path) }
         end
       end
     end

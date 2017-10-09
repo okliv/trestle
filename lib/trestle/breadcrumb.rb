@@ -10,9 +10,28 @@ module Trestle
       label == other.label && path == other.path
     end
 
+    def self.cast(obj)
+      case obj
+      when Breadcrumb
+        obj
+      when String
+        new(obj)
+      when Array
+        new(*obj)
+      else
+        raise ArgumentError, "Unable to cast #{obj.inspect} to Breadcrumb"
+      end
+    end
+
     class Trail
+      include Enumerable
+
       def initialize(breadcrumbs=[])
         @breadcrumbs = Array(breadcrumbs)
+      end
+
+      def ==(other)
+        to_a == other.to_a
       end
 
       def dup

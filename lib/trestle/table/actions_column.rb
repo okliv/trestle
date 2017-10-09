@@ -1,10 +1,10 @@
 module Trestle
   class Table
     class ActionsColumn
-      attr_reader :table, :block
+      attr_reader :table, :options, :block
 
-      def initialize(table, &block)
-        @table = table
+      def initialize(table, options={}, &block)
+        @table, @options = table, options
         @block = block_given? ? block : default_actions
       end
 
@@ -23,38 +23,40 @@ module Trestle
 
         delegate :table, to: :@column
 
+        delegate :icon, :admin_url_for, :concat, :link_to, to: :@template
+
         def initialize(column, template, instance)
           @column, @template, @instance = column, template, instance
         end
 
+        def show
+          button(icon("fa fa-info"), admin_url_for(instance, admin: table.admin, action: :show), class: "btn-info")
+        end
+
+        def edit
+          button(icon("fa fa-pencil"), admin_url_for(instance, admin: table.admin, action: :edit), class: "btn-warning")
+        end
+
         def delete
-          button(@template.icon("fa fa-trash"), @template.admin_url_for(instance, admin: table.options[:admin], action: :destroy), method: :delete, class: "btn-danger", data: { toggle: "confirm-delete", placement: "left" })
+          button(icon("fa fa-trash"), admin_url_for(instance, admin: table.admin, action: :destroy), method: :delete, class: "btn-danger", data: { toggle: "confirm-delete", placement: "left" })
         end
 
         def button(content, url, options={})
           options[:class] = Array(options[:class])
           options[:class] << "btn" unless options[:class].include?("btn")
 
-          @template.concat @template.link_to(content, url, options)
+          concat link_to(content, url, options)
         end
         alias_method :link, :button
       end
 
       class Renderer < Column::Renderer
         def header
-
+          options[:header]
         end
 
         def classes
-          "actions"
-        end
-
-        def options
-          {}
-        end
-
-        def data
-          {}
+          super + ["actions"]
         end
 
         def content(instance)
