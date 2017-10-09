@@ -1,6 +1,6 @@
 module Trestle
   class Panel
-    include ActionView::Helpers::PanelHelper
+    include ActionView::Helpers::TagHelper
 
     attr_reader :name, :options
 
@@ -13,7 +13,7 @@ module Trestle
     end
 
     def badge
-      content_tag(:span, options[:badge], class: "badge") if options[:badge]
+      content_tag(:span, options[:badge], class: 'badge') if options[:badge]
     end
   end
 end

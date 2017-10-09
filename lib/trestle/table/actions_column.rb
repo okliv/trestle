@@ -42,6 +42,7 @@ module Trestle
 
       class Renderer < Column::Renderer
         def header
+
         end
 
         def classes
