@@ -2,10 +2,13 @@ module Trestle
   module Adapters
     extend ActiveSupport::Autoload
 
+    autoload :Adapter
+
     autoload :ActiveRecordAdapter
     autoload :DraperAdapter
     autoload :SequelAdapter
 
+<<<<<<< HEAD
     class Adapter
       attr_reader :admin
 
@@ -70,6 +73,12 @@ module Trestle
         Class.new(self) do
           modules.each { |mod| include(mod) }
         end
+=======
+    # Creates a new Adapter class with the given modules mixed in
+    def self.compose(*modules)
+      Class.new(Adapter) do
+        modules.each { |mod| include(mod) }
+>>>>>>> pr/3
       end
     end
   end

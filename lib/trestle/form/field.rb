@@ -13,8 +13,13 @@ module Trestle
       end
 
       def errors
+<<<<<<< HEAD
         errors = builder.object.errors[name].to_a
         errors += builder.object.errors[name.to_s.sub(/_id$/, '')].to_a if name.to_s =~ /_id$/
+=======
+        errors = builder.errors(name)
+        errors += builder.errors(name.to_s.sub(/_id$/, '')) if name.to_s =~ /_id$/
+>>>>>>> pr/3
         errors
       end
 
@@ -39,7 +44,7 @@ module Trestle
       end
 
       def extract_options!
-        @wrapper = extract_wrapper_options(:help, :label, :hide_label).merge(options.delete(:wrapper))
+        @wrapper = extract_wrapper_options(*Fields::FormGroup::WRAPPER_OPTIONS).merge(options.delete(:wrapper))
       end
 
     private

@@ -28,8 +28,18 @@ module Trestle
         options[:sort].is_a?(Hash) ? options[:sort] : {}
       end
 
+      def header
+        if options[:header]
+          options[:header]
+        elsif table.admin
+          table.admin.human_attribute_name(field)
+        else
+          field.to_s.humanize.titleize
+        end
+      end
+
       class Renderer
-        delegate :options, to: :@column
+        delegate :options, :table, to: :@column
 
         def initialize(column, template)
           @column, @template = column, template
@@ -38,24 +48,22 @@ module Trestle
         def header
           return if options.has_key?(:header) && options[:header].in?([nil, false])
 
-          header = I18n.t("admin.table.headers.#{@column.field}", default: options[:header] || @column.field.to_s.humanize.titleize)
+          header = I18n.t("admin.table.headers.#{@column.field}", default: @column.header)
           header = @template.sort_link(header, @column.sort_field, @column.sort_options) if @column.sortable?
           header
         end
 
         def content(instance)
           value = column_value(instance)
-
-          return blank_column(instance) if value.nil?
-
-          content = format_column(value)
+          content = @template.format_value(value, options)
 
           if value.respond_to?(:id) && options[:link] != false
+            # Column value was a model instance (e.g. from an association).
             # Automatically link to instance's admin if available
             content = @template.admin_link_to(content, value)
           elsif options[:link]
             # Explicitly link to the specified admin, or the table's admin
-            content = @template.admin_link_to(content, instance, admin: options[:admin] || @column.table.options[:admin])
+            content = @template.admin_link_to(content, instance, admin: options[:admin] || table.admin)
           end
 
           content
@@ -72,46 +80,27 @@ module Trestle
       private
         def column_value(instance)
           if @column.block
-            @template.capture { @template.instance_exec(instance, &@column.block).to_s }
+            if defined?(Haml) && Haml::Helpers.block_is_haml?(@column.block)
+              # In order for table column blocks to work properly within Haml templates,
+              # the _hamlout local variable needs to be defined in the scope of the block,
+              # so that the Haml version of the capture method is used. Because we
+              # evaluate the block using instance_exec, we need to set this up manually.
+              -> {
+                _hamlout = eval('_hamlout', @column.block.binding)
+                value = nil
+                buffer = @template.capture { value = @template.instance_exec(instance, &@column.block) }
+                value.is_a?(String) ? buffer : value
+              }.call
+            else
+              # Capture both the immediate value and captured output of the block.
+              # If the result of the block is a string, then use the contents of the buffer.
+              # Otherwise return the result of the block as a raw value (for auto-formatting).
+              value = nil
+              buffer = @template.capture { value = @template.instance_exec(instance, &@column.block) }
+              value.is_a?(String) ? buffer : value
+            end
           else
             instance.send(@column.field)
-          end
-        end
-
-        def blank_column(value)
-          text = options.key?(:blank) ? options[:blank] : I18n.t("admin.table.column.blank")
-          @template.content_tag(:span, text, class: "blank")
-        end
-
-        def format_column(value)
-          if options.key?(:format)
-            format_from_options(value)
-          else
-            autoformat_value(value)
-          end
-        end
-
-        def format_from_options(value)
-          case options[:format]
-          when :currency
-            @template.number_to_currency(value)
-          else
-            value
-          end
-        end
-
-        def autoformat_value(value)
-          case value
-          when Time, DateTime
-            @template.timestamp(value)
-          when Date
-            @template.datestamp(value)
-          when TrueClass, FalseClass
-            @template.status_tag(@template.icon("fa fa-check"), :success) if value
-          when ->(value) { value.respond_to?(:id) }
-            @template.display(value)
-          else
-            value
           end
         end
       end

@@ -1,10 +1,10 @@
 module Trestle
   class Table
     class ActionsColumn
-      attr_reader :table, :block
+      attr_reader :table, :options, :block
 
-      def initialize(table, &block)
-        @table = table
+      def initialize(table, options={}, &block)
+        @table, @options = table, options
         @block = block_given? ? block : default_actions
       end
 
@@ -13,8 +13,10 @@ module Trestle
       end
 
       def default_actions
+        admin = table.admin
+
         ->(action) do
-          action.delete
+          action.delete if admin && admin.actions.include?(:destroy)
         end
       end
 
@@ -23,38 +25,44 @@ module Trestle
 
         delegate :table, to: :@column
 
+        delegate :concat, :icon, :link_to, :admin_url_for, :admin_link_to, to: :@template
+
         def initialize(column, template, instance)
           @column, @template, @instance = column, template, instance
         end
 
-        def delete
-          button(@template.icon("fa fa-trash"), @template.admin_url_for(instance, admin: table.options[:admin], action: :destroy), method: :delete, class: "btn-danger", data: { toggle: "confirm-delete", placement: "left" })
+        def show
+          button(icon("fa fa-info"), instance, action: :show, class: "btn-info")
         end
 
-        def button(content, url, options={})
+        def edit
+          button(icon("fa fa-pencil"), instance, action: :edit, class: "btn-warning")
+        end
+
+        def delete
+          button(icon("fa fa-trash"), instance, action: :destroy, method: :delete, class: "btn-danger", data: { toggle: "confirm-delete", placement: "left" })
+        end
+
+        def button(content, instance_or_url, options={})
           options[:class] = Array(options[:class])
           options[:class] << "btn" unless options[:class].include?("btn")
 
-          @template.concat @template.link_to(content, url, options)
+          concat admin_link_to(content, instance_or_url, options.reverse_merge(admin: table.admin))
         end
         alias_method :link, :button
       end
 
       class Renderer < Column::Renderer
         def header
+<<<<<<< HEAD
 
+=======
+          options[:header]
+>>>>>>> pr/3
         end
 
         def classes
-          "actions"
-        end
-
-        def options
-          {}
-        end
-
-        def data
-          {}
+          super + ["actions"]
         end
 
         def content(instance)

@@ -40,7 +40,7 @@ module Trestle
       end
 
       def label
-        I18n.t("admin.navigation.items.#{name}", default: name.to_s.titlecase)
+        options[:label] || I18n.t("admin.navigation.items.#{name}", default: name.to_s.titlecase)
       end
 
       def icon
@@ -53,6 +53,16 @@ module Trestle
 
       def badge
         Badge.new(options[:badge]) if badge?
+      end
+
+      def visible?(context)
+        if options[:if]
+          context.instance_exec(&options[:if])
+        elsif options[:unless]
+          !context.instance_exec(&options[:unless])
+        else
+          true
+        end
       end
 
       class Badge

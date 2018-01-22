@@ -3,7 +3,6 @@ module Trestle
     class Automatic < Table
       def initialize(admin)
         super(sortable: true, admin: admin)
-        @admin = admin
       end
 
       def columns
@@ -11,20 +10,14 @@ module Trestle
       end
 
       def content_columns
-        @admin.default_attributes.map.with_index do |attribute, index|
-          next if attribute.inheritance_column?
-          next if attribute.counter_cache?
-
-          if attribute.association?
+        admin.default_table_attributes.map.with_index do |attribute, index|
+          case attribute.type
+          when :association
             Column.new(self, attribute.association_name, sort: false)
-          elsif attribute.text?
-            Column.new(self, attribute.name, link: index.zero?) do |instance|
-              truncate(instance.public_send(attribute.name))
-            end
           else
-            Column.new(self, attribute.name, link: index.zero?, align: (:center if attribute.datetime? || attribute.boolean?))
+            Column.new(self, attribute.name, link: index.zero?, align: (:center if [:datetime, :boolean].include?(attribute.type)))
           end
-        end.compact
+        end
       end
 
       def actions_column

@@ -5,6 +5,9 @@ module Trestle
     autoload :Builder
     autoload :Controller
 
+    RESOURCE_ACTIONS = [:index, :show, :new, :create, :edit, :update, :destroy]
+    READONLY_ACTIONS = [:index, :show]
+
     class << self
       def adapter
         @adapter ||= Trestle.config.default_adapter.new(self)
@@ -17,10 +20,11 @@ module Trestle
       # Defines a method that can be overridden with a custom block,
       # but is otherwise delegated to the adapter instance.
       def self.adapter_method(name)
-        attr_writer name
+        block_method = :"#{name}_block"
+        attr_accessor block_method
 
         define_method(name) do |*args|
-          if override = instance_variable_get("@#{name}")
+          if override = public_send(block_method)
             instance_exec(*args, &override)
           else
             adapter.public_send(name, *args)
@@ -39,10 +43,12 @@ module Trestle
       adapter_method :decorate_collection
       adapter_method :unscope
       adapter_method :merge_scopes
+      adapter_method :count
       adapter_method :sort
       adapter_method :paginate
-      adapter_method :count
-      adapter_method :default_attributes
+      adapter_method :human_attribute_name
+      adapter_method :default_table_attributes
+      adapter_method :default_form_attributes
 
       attr_accessor :decorator
 
@@ -95,9 +101,7 @@ module Trestle
         return collection unless params[:sort]
 
         field = params[:sort].to_sym
-
-        order = params[:order].downcase
-        order = "asc" unless %w(asc desc).include?(order)
+        order = params[:order].to_s.downcase == "desc" ? :desc : :asc
 
         if column_sorts.has_key?(field)
           instance_exec(collection, order, &column_sorts[field])
@@ -119,41 +123,48 @@ module Trestle
       end
 
       def model_name
-        options[:as] || default_model_name
+        @model_name ||= Trestle::ModelName.new(model)
+      end
+
+      def actions
+        @actions ||= (readonly? ? READONLY_ACTIONS : RESOURCE_ACTIONS).dup
       end
 
       def readonly?
         options[:readonly]
       end
 
-      def breadcrumb
-        Breadcrumb.new(model_name.pluralize, path)
+      def default_breadcrumb
+        Breadcrumb.new(I18n.t("admin.breadcrumbs.#{admin_name}", default: model_name.plural.titleize), path)
       end
 
       def routes
         admin = self
 
         Proc.new do
-          resources admin.admin_name, controller: admin.controller_namespace, as: admin.route_name, path: admin.options[:path], except: admin.disabled_routes do
+          resources admin.admin_name, controller: admin.controller_namespace, as: admin.route_name, path: admin.options[:path], except: (RESOURCE_ACTIONS - admin.actions) do
             instance_exec(&admin.additional_routes) if admin.additional_routes
           end
         end
       end
 
-      def disabled_routes
-        readonly? ? [:new, :create, :edit, :update, :destroy] : []
+      def return_locations
+        @return_locations ||= {
+          create:  Proc.new { |instance| path(:show, id: to_param(instance)) },
+          update:  Proc.new { |instance| path(:show, id: to_param(instance)) },
+          destroy: Proc.new { path(:index) }
+        }
+      end
+
+      def return_location(action, instance=nil)
+        instance_exec(instance, &return_locations[action])
       end
 
     private
       def infer_model_class
         parent.const_get(admin_name.classify)
       rescue NameError
-        nil
-      end
-
-      def default_model_name
-        model_name = model.model_name
-        model_name.respond_to?(:human) ? model_name.human : model_name.to_s.titleize
+        raise NameError, "Unable to find model #{admin_name.classify}. Specify a different model using Trestle.resource(:#{admin_name}, model: MyModel)"
       end
     end
   end

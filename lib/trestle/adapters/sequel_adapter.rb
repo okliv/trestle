@@ -1,9 +1,20 @@
+<<<<<<< HEAD
+=======
+begin
+  require "sequel"
+rescue LoadError
+  $stderr.puts "You don't have sequel installed in your application. Please add it to your Gemfile and run bundle install"
+  raise
+end
+
+>>>>>>> pr/3
 Sequel::Model.plugin :active_model
 
 module Trestle
   module Adapters
     module SequelAdapter
       def collection(params={})
+<<<<<<< HEAD
         admin.model.dataset
       end
 
@@ -13,6 +24,17 @@ module Trestle
 
       def build_instance(attrs={}, params={})
         admin.model.new(attrs)
+=======
+        model.dataset
+      end
+
+      def find_instance(params)
+        model[params[:id]]
+      end
+
+      def build_instance(attrs={}, params={})
+        model.new(attrs)
+>>>>>>> pr/3
       end
 
       def update_instance(instance, attrs, params={})
@@ -27,22 +49,34 @@ module Trestle
         instance.destroy
       end
 
+<<<<<<< HEAD
       def to_param(instance)
         instance
       end
 
+=======
+>>>>>>> pr/3
       def unscope(scope)
         scope.unfiltered
       end
 
       def merge_scopes(scope, other)
+<<<<<<< HEAD
         scope.where(id: other.select(:id))
+=======
+        scope.intersect(other)
+      end
+
+      def count(collection)
+        collection.count
+>>>>>>> pr/3
       end
 
       def sort(collection, field, order)
         collection.order(Sequel.send(order, field))
       end
 
+<<<<<<< HEAD
       def paginate(collection, params)
         collection = Kaminari.paginate_array(collection.to_a) unless collection.respond_to?(:page)
         collection.page(params[:page])
@@ -62,6 +96,38 @@ module Trestle
           end
         end
       end
+=======
+      def default_table_attributes
+        default_attributes.reject do |attribute|
+          inheritance_column?(attribute)
+        end
+      end
+
+      def default_form_attributes
+        default_attributes.reject do |attribute|
+          primary_key?(attribute) || inheritance_column?(attribute)
+        end
+      end
+
+    protected
+      def default_attributes
+        model.db_schema.map do |column_name, column_attrs|
+          if column_name.to_s.end_with?("_id") && (name = column_name.to_s.sub(/_id$/, '')) && (reflection = model.association_reflection(name.to_sym))
+            Attribute::Association.new(column_name, class: -> { reflection.associated_class }, name: name)
+          else
+            Attribute.new(column_name, column_attrs[:type])
+          end
+        end
+      end
+
+      def primary_key?(attribute)
+        attribute.name.to_s == model.primary_key.to_s
+      end
+
+      def inheritance_column?(attribute)
+        model.respond_to?(:sti_key) && attribute.name.to_s == model.sti_key.to_s
+      end
+>>>>>>> pr/3
     end
   end
 end

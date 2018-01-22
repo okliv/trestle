@@ -1,10 +1,11 @@
 require 'spec_helper'
 
-class Trestle::ApplicationController < ActionController::Base; end
+#class Trestle::ApplicationController < ActionController::Base; end
 
 describe Trestle::Admin::Builder do
   before(:each) do
     Object.send(:remove_const, :TestAdmin) if Object.const_defined?(:TestAdmin)
+    stub_const("Trestle::ApplicationController", Class.new(ActionController::Base))
   end
 
   it "creates a top-level Admin subclass" do
@@ -117,10 +118,11 @@ describe Trestle::Admin::Builder do
       b = Proc.new {}
 
       Trestle::Admin::Builder.build(:test) do
-        form &b
+        form custom: "option", &b
       end
 
       expect(::TestAdmin.form).to be_a(Trestle::Form)
+      expect(::TestAdmin.form.options).to eq(custom: "option")
       expect(::TestAdmin.form.block).to eq(b)
     end
   end
@@ -134,6 +136,18 @@ describe Trestle::Admin::Builder do
       end
 
       expect(::TestAdmin.additional_routes).to eq(b)
+    end
+  end
+
+  describe "#breadcrumb" do
+    it "overrides the default breadcrumb" do
+      b = Trestle::Breadcrumb.new("Custom")
+
+      Trestle::Admin::Builder.build(:test) do
+        breadcrumb { b }
+      end
+
+      expect(::TestAdmin.breadcrumb).to eq(b)
     end
   end
 end

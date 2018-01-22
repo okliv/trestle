@@ -9,6 +9,14 @@ module Trestle
       cattr_accessor :fields
       self.fields = {}
 
+      def errors(name)
+        if object.respond_to?(:errors) && object.errors.respond_to?(:[])
+          object.errors[name].to_a
+        else
+          []
+        end
+      end
+
       def self.register(name, klass)
         rename_existing_helper_method(name)
         self.fields[name] = klass

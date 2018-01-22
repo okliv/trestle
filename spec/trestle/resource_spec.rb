@@ -2,11 +2,13 @@ require 'spec_helper'
 
 describe Trestle::Resource do
   before(:each) do
+    class Test; end
     class TestAdmin < Trestle::Resource; end
   end
 
   after(:each) do
     Object.send(:remove_const, :TestAdmin)
+    Object.send(:remove_const, :Test) if defined?(Test)
   end
 
   subject(:admin) { TestAdmin }
@@ -16,14 +18,34 @@ describe Trestle::Resource do
   end
 
   it "infers the model from the admin name" do
-    class Test; end
     expect(admin.model).to eq(Test)
+  end
+
+  it "raises an exception if the inferred model does not exist" do
+    Object.send(:remove_const, :Test) if defined?(Test)
+    expect { admin.model }.to raise_exception(NameError, "Unable to find model Test. Specify a different model using Trestle.resource(:test, model: MyModel)")
   end
 
   it "allows the model to be specified manually via options" do
     class AlternateModel; end
     admin.options = { model: AlternateModel }
     expect(admin.model).to eq(AlternateModel)
+  end
+
+  it "has a model name" do
+    expect(admin.model_name).to eq(Trestle::ModelName.new(Test))
+  end
+
+  it "has a breadcrumb trail" do
+    expect(I18n).to receive(:t).with("admin.breadcrumbs.home", default: "Home").and_return("Home")
+    expect(I18n).to receive(:t).with("admin.breadcrumbs.test", default: "Tests").and_return("Tests")
+
+    trail = Trestle::Breadcrumb::Trail.new([
+      Trestle::Breadcrumb.new("Home", "/admin"),
+      Trestle::Breadcrumb.new("Tests", "/admin/test")
+    ])
+
+    expect(admin.breadcrumbs).to eq(trail)
   end
 
   context "scoped within a module" do
@@ -68,41 +90,13 @@ describe Trestle::Resource do
     expect(admin.decorate_collection(collection)).to eq(collection)
   end
 
-  describe "#model_name" do
-    context "#model_name on the class returns an ActiveModel::Name" do
-      it "returns the humanized model name" do
-        model_name = double(human: "ActiveModel Class")
-        class Test; end
-
-        expect(Test).to receive(:model_name).and_return(model_name)
-        expect(admin.model_name).to eq("ActiveModel Class")
-      end
-    end
-
-    context "#model_name on the class returns a string" do
-      it "returns the titleized model name" do
-        class Test; end
-
-        expect(Test).to receive(:model_name).and_return("TestClass")
-        expect(admin.model_name).to eq("Test Class")
-      end
-    end
-
-    it "can be overridden via the `as` option" do
-      admin.options = { as: "Custom Class" }
-
-      expect(Test).to_not receive(:model_name)
-      expect(admin.model_name).to eq("Custom Class")
-    end
-  end
-
   describe "#apply_sorting" do
     let(:collection) { double }
     let(:sorted_collection) { double }
 
     context "when given sort params" do
       it "reorders the given collection" do
-        expect(collection).to receive(:reorder).with(field: "asc").and_return(sorted_collection)
+        expect(collection).to receive(:reorder).with(field: :asc).and_return(sorted_collection)
         expect(admin.apply_sorting(collection, sort: "field", order: "asc")).to eq(sorted_collection)
       end
     end
@@ -117,9 +111,18 @@ describe Trestle::Resource do
       it "reorders the collection using the column sort" do
         TestAdmin.column_sorts[:field] = ->(collection, order) { collection.order(field: order) }
 
-        expect(collection).to receive(:order).with(field: "desc").and_return(sorted_collection)
+        expect(collection).to receive(:order).with(field: :desc).and_return(sorted_collection)
         expect(admin.apply_sorting(collection, sort: "field", order: "desc")).to eq(sorted_collection)
       end
+    end
+  end
+
+  describe "#return_location" do
+    let(:instance) { double(id: 123) }
+
+    it "evaluates the return block for given action" do
+      expect(admin.return_location(:create, instance)).to eq(admin.path(:show, id: 123))
+      expect(admin.return_location(:destroy)).to eq(admin.path(:index))
     end
   end
 end
