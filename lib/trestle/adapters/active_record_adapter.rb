@@ -10,7 +10,11 @@ module Trestle
       end
 
       def build_instance(attrs={}, params={})
+<<<<<<< HEAD
+        admin.model.new(attrs)
+=======
         model.new(attrs)
+>>>>>>> pr/3
       end
 
       def update_instance(instance, attrs, params={})

@@ -39,7 +39,7 @@ module Trestle
       end
 
       class Renderer
-        delegate :options, to: :@column
+        delegate :options, :table, to: :@column
 
         def initialize(column, template)
           @column, @template = column, template
@@ -58,11 +58,12 @@ module Trestle
           content = @template.format_value(value, options)
 
           if value.respond_to?(:id) && options[:link] != false
+            # Column value was a model instance (e.g. from an association).
             # Automatically link to instance's admin if available
             content = @template.admin_link_to(content, value)
           elsif options[:link]
             # Explicitly link to the specified admin, or the table's admin
-            content = @template.admin_link_to(content, instance, admin: options[:admin] || @column.table.admin)
+            content = @template.admin_link_to(content, instance, admin: options[:admin] || table.admin)
           end
 
           content
@@ -86,10 +87,17 @@ module Trestle
               # evaluate the block using instance_exec, we need to set this up manually.
               -> {
                 _hamlout = eval('_hamlout', @column.block.binding)
-                @template.capture { @template.instance_exec(instance, &@column.block).to_s }
+                value = nil
+                buffer = @template.capture { value = @template.instance_exec(instance, &@column.block) }
+                value.is_a?(String) ? buffer : value
               }.call
             else
-              @template.capture { @template.instance_exec(instance, &@column.block).to_s }
+              # Capture both the immediate value and captured output of the block.
+              # If the result of the block is a string, then use the contents of the buffer.
+              # Otherwise return the result of the block as a raw value (for auto-formatting).
+              value = nil
+              buffer = @template.capture { value = @template.instance_exec(instance, &@column.block) }
+              value.is_a?(String) ? buffer : value
             end
           else
             instance.send(@column.field)

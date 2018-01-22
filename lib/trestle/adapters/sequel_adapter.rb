@@ -1,3 +1,5 @@
+<<<<<<< HEAD
+=======
 begin
   require "sequel"
 rescue LoadError
@@ -5,12 +7,24 @@ rescue LoadError
   raise
 end
 
+>>>>>>> pr/3
 Sequel::Model.plugin :active_model
 
 module Trestle
   module Adapters
     module SequelAdapter
       def collection(params={})
+<<<<<<< HEAD
+        admin.model.dataset
+      end
+
+      def find_instance(params)
+        admin.model[params[:id]]
+      end
+
+      def build_instance(attrs={}, params={})
+        admin.model.new(attrs)
+=======
         model.dataset
       end
 
@@ -20,6 +34,7 @@ module Trestle
 
       def build_instance(attrs={}, params={})
         model.new(attrs)
+>>>>>>> pr/3
       end
 
       def update_instance(instance, attrs, params={})
@@ -34,22 +49,54 @@ module Trestle
         instance.destroy
       end
 
+<<<<<<< HEAD
+      def to_param(instance)
+        instance
+      end
+
+=======
+>>>>>>> pr/3
       def unscope(scope)
         scope.unfiltered
       end
 
       def merge_scopes(scope, other)
+<<<<<<< HEAD
+        scope.where(id: other.select(:id))
+=======
         scope.intersect(other)
       end
 
       def count(collection)
         collection.count
+>>>>>>> pr/3
       end
 
       def sort(collection, field, order)
         collection.order(Sequel.send(order, field))
       end
 
+<<<<<<< HEAD
+      def paginate(collection, params)
+        collection = Kaminari.paginate_array(collection.to_a) unless collection.respond_to?(:page)
+        collection.page(params[:page])
+      end
+
+      def count(collection)
+        collection.count
+      end
+
+      def default_attributes
+        reflections = admin.model.association_reflections
+        admin.model.db_schema.reject{|k,v| k.to_s.end_with?('_id')}.map do |column_name, column_attrs|
+          if reflection = reflections[column_name]
+            Attribute::Association.new(admin, "#{column_name}_id".to_sym, reflection.to_h[:orig_opts][:class_name].safe_constantize)
+          else
+            Attribute.new(admin, column_name, column_attrs[:type])
+          end
+        end
+      end
+=======
       def default_table_attributes
         default_attributes.reject do |attribute|
           inheritance_column?(attribute)
@@ -80,6 +127,7 @@ module Trestle
       def inheritance_column?(attribute)
         model.respond_to?(:sti_key) && attribute.name.to_s == model.sti_key.to_s
       end
+>>>>>>> pr/3
     end
   end
 end

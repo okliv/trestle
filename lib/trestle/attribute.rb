@@ -6,8 +6,37 @@ module Trestle
       @name, @type, @options = name.to_sym, type, options
     end
 
+<<<<<<< HEAD
+    def association?
+      type == :association
+    end
+
+    def boolean?
+      type == :boolean
+    end
+
+    def text?
+      type == :text
+    end
+
+    def datetime?
+      [:datetime, :time, :date].include?(type)
+    end
+
+    def primary_key?
+      name.to_s == admin.model.primary_key.to_s
+    end
+
+    def inheritance_column?
+      name.to_s == admin.model.try(:inheritance_column)
+    end
+
+    def counter_cache?
+      name.to_s.end_with?("_count")
+=======
     def array?
       options[:array] == true
+>>>>>>> pr/3
     end
 
     class Association < Attribute

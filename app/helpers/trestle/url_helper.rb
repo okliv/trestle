@@ -1,20 +1,50 @@
 module Trestle
   module UrlHelper
-    def admin_link_to(content, instance=nil, options={}, &block)
+    DIALOG_ACTIONS = [:new, :show, :edit]
+
+    def admin_link_to(content, instance_or_url=nil, options={}, &block)
       if block_given?
-        instance, options = content, instance || {}
+        instance_or_url, options = content, instance_or_url || {}
         content = capture(&block)
       end
 
-      if admin = (options.key?(:admin) ? Trestle.lookup(options.delete(:admin)) : admin_for(instance))
-        link_to(content, admin_url_for(instance, admin: admin), options)
+      if instance_or_url.is_a?(String)
+        link_to(content, instance_or_url, options)
       else
-        content
+        if instance_or_url.is_a?(Hash)
+          instance_or_url, options = nil, instance_or_url
+        end
+
+        if options.key?(:admin)
+          admin = Trestle.lookup(options.delete(:admin))
+        elsif instance_or_url.respond_to?(:id)
+          admin = admin_for(instance_or_url)
+        end
+
+        admin ||= self.admin if respond_to?(:admin)
+
+        if admin
+          action = options.delete(:action) || :show
+
+          params = options.delete(:params) || {}
+          params[:id] ||= admin.to_param(instance_or_url) if instance_or_url
+
+          if DIALOG_ACTIONS.include?(action) && admin.form.dialog?
+            options[:data] ||= {}
+            options[:data][:behavior] ||= "dialog"
+          end
+
+          link_to(content, admin.path(action, params), options)
+        else
+          raise ActionController::UrlGenerationError, "An admin could not be inferred. Please specify an admin using the :admin option."
+        end
       end
     end
 
     def admin_url_for(instance, options={})
-      admin = options.key?(:admin) ? Trestle.lookup(options[:admin]) : admin_for(instance)
+      admin = Trestle.lookup(options[:admin]) if options.key?(:admin)
+      admin ||= admin_for(instance)
+
       admin.path(options[:action] || :show, id: admin.to_param(instance)) if admin
     end
 

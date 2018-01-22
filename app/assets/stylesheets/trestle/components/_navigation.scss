@@ -48,7 +48,7 @@
 
     padding: 5px 20px;
 
-    &:after {
+    &::after {
       @extend .ion;
       content: $ionicon-var-arrow-down-b;
 
@@ -61,8 +61,8 @@
     &:hover, &:focus {
       background: none;
 
-      &:after {
-        opacity: 1.0;
+      &::before, &::after {
+        opacity: 1 !important;
       }
     }
   }
@@ -98,12 +98,28 @@
   padding: 10px 15px 15px;
   text-indent: -99999px;
 
-  &:after {
-    display: block;
-    float: none;
-    margin-top: -12px;
-    content: '';
+  &::after {
+    display: none;
+
+    position: absolute;
+    top: 4px;
+    left: 50%;
+    margin-left: -3px;
+
+    text-indent: 0;
+  }
+
+  &::before {
+    content: "";
+
+    position: absolute;
+    left: 15px;
+    right: 15px;
+    top: 50%;
+    margin-top: -4px;
+
     border-bottom: 1px solid rgba(white, 0.1);
+    opacity: 0.75;
   }
 }
 
@@ -117,14 +133,27 @@
       @include collapsed-nav-header;
     }
 
-    .expanded & {
-      .nav-header {
+    .collapsed .nav-header a {
+      &::after {
         display: block;
-        border-bottom: none;
+      }
+    }
+
+    .expanded & {
+      .nav-header a {
         height: auto;
-        margin: 0;
         padding: 5px 20px;
         text-indent: 0;
+
+        &::before {
+          display: none;
+        }
+
+        &::after {
+          display: block;
+          position: static;
+          margin-left: 0;
+        }
       }
 
       .nav-label  { display: inline; }
@@ -141,6 +170,12 @@
 
     .nav-header a {
       @include collapsed-nav-header;
+    }
+
+    .collapsed .nav-header a {
+      &::after {
+        display: block;
+      }
     }
   }
 }

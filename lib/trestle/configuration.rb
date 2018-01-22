@@ -13,8 +13,13 @@ module Trestle
     # Custom image for the collapsed/tablet navigation
     option :site_logo_small
 
+<<<<<<< HEAD
+    option :path, '/admin'
+    option :automount, true
+=======
     # Text shown in the admin page footer
     option :footer, -> { I18n.t("trestle.footer", default: "Powered by Trestle") }
+>>>>>>> pr/3
 
 
     ## Mounting Options
@@ -26,7 +31,11 @@ module Trestle
     option :automount, true
 
 
+<<<<<<< HEAD
+    option :default_adapter, Adapters::Adapter.compose(Adapters::ActiveRecordAdapter, Adapters::DraperAdapter, Adapters::SequelAdapter)
+=======
     ## Navigation Options
+>>>>>>> pr/3
 
     # Initial breadcrumbs to display in the breadcrumb trail
     option :root_breadcrumbs, -> { [Trestle::Breadcrumb.new(I18n.t("admin.breadcrumbs.home", default: "Home"), Trestle.config.path)] }
@@ -83,7 +92,12 @@ module Trestle
     end
 
     # List of i18n keys to pass into the Trestle.i18n JavaScript object
-    option :javascript_i18n_keys, ["admin.confirmation.title", "admin.confirmation.delete", "admin.confirmation.cancel"]
+    option :javascript_i18n_keys, ["admin.confirmation.title", "admin.confirmation.delete", "admin.confirmation.cancel", "trestle.dialog.error", "admin.buttons.ok"]
+
+    # List of load paths for where to find admin definitions
+    option :load_paths, [
+      -> { ActiveSupport::Dependencies.autoload_paths.grep(/\/app\/admin\Z/) }
+    ]
 
 
     ## Debugging

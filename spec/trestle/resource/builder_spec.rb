@@ -54,6 +54,18 @@ describe Trestle::Resource::Builder do
     end
   end
 
+  describe "#remove_action" do
+    it "removes the given action(s) from the resource" do
+      Trestle::Resource::Builder.build(:test) do
+        remove_action :edit, :update
+      end
+
+      expect(::TestAdmin.actions).to eq([:index, :show, :new, :create, :destroy])
+      expect(::TestAdmin::AdminController).not_to respond_to(:edit)
+      expect(::TestAdmin::AdminController).not_to respond_to(:update)
+    end
+  end
+
   describe "#collection" do
     it "sets an explicit collection block" do
       Trestle::Resource::Builder.build(:test) do
@@ -282,6 +294,34 @@ describe Trestle::Resource::Builder do
         expect(::TestAdmin.scopes).to include(my_scope: be_a(Trestle::Scope))
         expect(::TestAdmin.scopes[:my_scope].options).to eq(label: "Custom Label")
         expect(::TestAdmin.scopes[:my_scope].block).to eq(b)
+      end
+    end
+  end
+
+  describe "#return_to" do
+    context "given options[:on]" do
+      it "sets a return location block for the given action" do
+        b = Proc.new {}
+
+        Trestle::Resource::Builder.build(:test) do
+          return_to on: :create, &b
+        end
+
+        expect(::TestAdmin.return_locations[:create]).to eq(b)
+      end
+    end
+
+    context "without options[:on]" do
+      it "sets the return location block for all actions" do
+        b = Proc.new {}
+
+        Trestle::Resource::Builder.build(:test) do
+          return_to &b
+        end
+
+        expect(::TestAdmin.return_locations[:create]).to eq(b)
+        expect(::TestAdmin.return_locations[:update]).to eq(b)
+        expect(::TestAdmin.return_locations[:destroy]).to eq(b)
       end
     end
   end
