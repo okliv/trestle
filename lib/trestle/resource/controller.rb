@@ -57,12 +57,7 @@ module Trestle
       end
 
       def update
-        << << << < HEAD
-        self.instance = admin.find_instance(params)
-        admin.update_instance(instance, admin.permitted_params(params), params)
-        === === =
-            admin.update_instance(instance, permitted_params, params)
-        >> >> >> > pr / 3
+        admin.update_instance(instance, permitted_params, params)
 
         if admin.save_instance(instance)
           respond_to do |format|
