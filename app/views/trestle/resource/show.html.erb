@@ -13,11 +13,8 @@
   <% end if admin.actions.include?(:destroy) %>
 <% end %>
 
-<<<<<<< HEAD
-<%= trestle_form_for instance, url: admin.readonly? ? "#" : admin.path(:update, id: admin.to_param(instance)), remote: request.xhr? do |f| %>
-  <%= render partial: "form", layout: "layout" %>
-=======
+<%#= trestle_form_for instance, url: admin.readonly? ? "#" : admin.path(:update, id: admin.to_param(instance)), remote: request.xhr? do |f| %>
+<%#= render partial: "form", layout: "layout" %>
 <%= trestle_form_for instance, url: admin.actions.include?(:update) ? admin.path(:update, id: admin.to_param(instance)) : "#", method: :patch do |f| %>
   <%= render partial: "form", layout: dialog_request? ? "dialog" : "layout" %>
->>>>>>> pr/3
 <% end %>

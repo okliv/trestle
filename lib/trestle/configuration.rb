@@ -13,14 +13,8 @@ module Trestle
     # Custom image for the collapsed/tablet navigation
     option :site_logo_small
 
-<<<<<<< HEAD
-    option :path, '/admin'
-    option :automount, true
-=======
     # Text shown in the admin page footer
     option :footer, -> { I18n.t("trestle.footer", default: "Powered by Trestle") }
->>>>>>> pr/3
-
 
     ## Mounting Options
 
@@ -30,12 +24,7 @@ module Trestle
     # Automatically mount the admin within the Rails application's routes
     option :automount, true
 
-
-<<<<<<< HEAD
-    option :default_adapter, Adapters::Adapter.compose(Adapters::ActiveRecordAdapter, Adapters::DraperAdapter, Adapters::SequelAdapter)
-=======
     ## Navigation Options
->>>>>>> pr/3
 
     # Initial breadcrumbs to display in the breadcrumb trail
     option :root_breadcrumbs, -> { [Trestle::Breadcrumb.new(I18n.t("admin.breadcrumbs.home", default: "Home"), Trestle.config.path)] }

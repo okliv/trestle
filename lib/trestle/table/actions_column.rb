@@ -54,11 +54,7 @@ module Trestle
 
       class Renderer < Column::Renderer
         def header
-<<<<<<< HEAD
-
-=======
           options[:header]
->>>>>>> pr/3
         end
 
         def classes

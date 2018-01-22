@@ -13,12 +13,6 @@ module Trestle
 
       def new
         self.instance = admin.build_instance({}, params)
-<<<<<<< HEAD
-      end
-
-      def create
-        self.instance = admin.build_instance(admin.permitted_params(params), params)
-=======
 
         respond_to do |format|
           format.html
@@ -29,7 +23,6 @@ module Trestle
 
       def create
         self.instance = admin.build_instance(permitted_params, params)
->>>>>>> pr/3
 
         if admin.save_instance(instance)
           respond_to do |format|
@@ -64,12 +57,12 @@ module Trestle
       end
 
       def update
-<<<<<<< HEAD
+        << << << < HEAD
         self.instance = admin.find_instance(params)
         admin.update_instance(instance, admin.permitted_params(params), params)
-=======
-        admin.update_instance(instance, permitted_params, params)
->>>>>>> pr/3
+        === === =
+            admin.update_instance(instance, permitted_params, params)
+        >> >> >> > pr / 3
 
         if admin.save_instance(instance)
           respond_to do |format|
@@ -115,7 +108,7 @@ module Trestle
         end
       end
 
-    protected
+      protected
       def instance
         @instance ||= admin.find_instance(params)
       end
@@ -127,7 +120,7 @@ module Trestle
       attr_writer :instance, :collection
       helper_method :instance, :collection
 
-      def flash_message(type, options={})
+      def flash_message(type, options = {})
         t("trestle.flash.#{type}", options.merge(model_name: admin.model_name, lowercase_model_name: admin.model_name.downcase))
       end
 
