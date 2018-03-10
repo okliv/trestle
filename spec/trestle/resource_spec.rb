@@ -81,7 +81,8 @@ describe Trestle::Resource do
 
   it "has a default paginate block" do
     collection = double
-    expect(collection).to receive(:page).with(5).and_return([1, 2, 3])
+    expect(collection).to receive(:page).with(5).and_return(collection)
+    expect(collection).to receive(:per).with(nil).and_return([1, 2, 3])
     expect(admin.paginate(collection, page: 5)).to eq([1, 2, 3])
   end
 
@@ -90,39 +91,37 @@ describe Trestle::Resource do
     expect(admin.decorate_collection(collection)).to eq(collection)
   end
 
-  describe "#apply_sorting" do
-    let(:collection) { double }
-    let(:sorted_collection) { double }
+  describe "#prepare_collection" do
+    let(:collection) { [3, 1, 2] }
 
-    context "when given sort params" do
-      it "reorders the given collection" do
-        expect(collection).to receive(:reorder).with(field: :asc).and_return(sorted_collection)
-        expect(admin.apply_sorting(collection, sort: "field", order: "asc")).to eq(sorted_collection)
-      end
+    before(:each) do
+      allow(admin).to receive(:initialize_collection).and_return(collection)
     end
 
-    context "when given no sort params" do
-      it "returns the given collection" do
-        expect(admin.apply_sorting(collection, {})).to eq(collection)
+    describe "sorting" do
+      let(:sorted_collection) { [1, 2, 3] }
+
+      context "when given sort params" do
+        it "reorders the given collection" do
+          expect(collection).to receive(:reorder).with(field: :asc).and_return(sorted_collection)
+          expect(admin.prepare_collection(sort: "field", order: "asc")).to eq(sorted_collection)
+        end
       end
-    end
 
-    context "when a column sort for the field exists" do
-      it "reorders the collection using the column sort" do
-        TestAdmin.column_sorts[:field] = ->(collection, order) { collection.order(field: order) }
-
-        expect(collection).to receive(:order).with(field: :desc).and_return(sorted_collection)
-        expect(admin.apply_sorting(collection, sort: "field", order: "desc")).to eq(sorted_collection)
+      context "when given no sort params" do
+        it "returns the given collection" do
+          expect(admin.prepare_collection({})).to eq(collection)
+        end
       end
-    end
-  end
 
-  describe "#return_location" do
-    let(:instance) { double(id: 123) }
+      context "when a column sort for the field exists" do
+        it "reorders the collection using the column sort" do
+          TestAdmin.column_sorts[:field] = ->(collection, order) { collection.order(field: order) }
 
-    it "evaluates the return block for given action" do
-      expect(admin.return_location(:create, instance)).to eq(admin.path(:show, id: 123))
-      expect(admin.return_location(:destroy)).to eq(admin.path(:index))
+          expect(collection).to receive(:order).with(field: :desc).and_return(sorted_collection)
+          expect(admin.prepare_collection(sort: "field", order: "desc")).to eq(sorted_collection)
+        end
+      end
     end
   end
 end

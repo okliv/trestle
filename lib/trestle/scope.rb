@@ -20,18 +20,28 @@ module Trestle
 
     def apply(collection)
       if @block
-        @admin.instance_exec(&@block)
+        if @block.arity == 1
+          @admin.instance_exec(collection, &@block)
+        else
+          @admin.instance_exec(&@block)
+        end
       else
         collection.public_send(name)
       end
     end
 
     def count(collection)
-      @admin.count(@admin.merge_scopes(collection, apply(@admin.unscope(collection))))
+      @admin.count(@admin.merge_scopes(collection, apply(collection)))
     end
 
     def active?(params)
-      @admin.scopes_for(params).include?(self)
+      active_scopes = Array(params[:scope])
+
+      if active_scopes.any?
+        active_scopes.include?(to_param.to_s)
+      else
+        default?
+      end
     end
   end
 end

@@ -3,10 +3,16 @@ module Trestle
     extend ActiveSupport::Autoload
 
     autoload :Builder
+    autoload :Collection
     autoload :Controller
 
     RESOURCE_ACTIONS = [:index, :show, :new, :create, :edit, :update, :destroy]
     READONLY_ACTIONS = [:index, :show]
+
+    class_attribute :decorator
+
+    class_attribute :pagination_options
+    self.pagination_options = {}
 
     class << self
       def adapter
@@ -32,33 +38,33 @@ module Trestle
         end
       end
 
+      # Collection-focused adapter methods
       adapter_method :collection
+      adapter_method :merge_scopes
+      adapter_method :sort
+      adapter_method :paginate
+      adapter_method :finalize_collection
+      adapter_method :decorate_collection
+      adapter_method :count
+
+      # Instance-focused adapter methods
       adapter_method :find_instance
       adapter_method :build_instance
       adapter_method :update_instance
       adapter_method :save_instance
       adapter_method :delete_instance
-      adapter_method :to_param
       adapter_method :permitted_params
-      adapter_method :decorate_collection
-      adapter_method :unscope
-      adapter_method :merge_scopes
-      adapter_method :count
-      adapter_method :sort
-      adapter_method :paginate
+
+      # Common adapter methods
+      adapter_method :to_param
       adapter_method :human_attribute_name
+
+      # Automatic tables and forms adapter methods
       adapter_method :default_table_attributes
       adapter_method :default_form_attributes
 
-      attr_accessor :decorator
-
       def prepare_collection(params)
-        collection = initialize_collection(params)
-        collection = apply_scopes(collection, params)
-        collection = apply_sorting(collection, params)
-        collection = paginate(collection, params)
-        collection = decorate_collection(collection)
-        collection
+        Collection.new(self).prepare(params)
       end
 
       def initialize_collection(params)
@@ -69,45 +75,8 @@ module Trestle
         @scopes ||= {}
       end
 
-      def apply_scopes(collection, params)
-        unscoped = unscope(collection)
-
-        scopes_for(params).each do |scope|
-          collection = merge_scopes(collection, scope.apply(unscoped))
-        end
-
-        collection
-      end
-
-      def scopes_for(params)
-        result = []
-
-        if params[:scope] && scopes.has_key?(params[:scope].to_sym)
-          result << scopes[params[:scope].to_sym]
-        end
-
-        if result.empty? && default_scope = scopes.values.find(&:default?)
-          result << default_scope
-        end
-
-        result
-      end
-
       def column_sorts
         @column_sorts ||= {}
-      end
-
-      def apply_sorting(collection, params)
-        return collection unless params[:sort]
-
-        field = params[:sort].to_sym
-        order = params[:order].to_s.downcase == "desc" ? :desc : :asc
-
-        if column_sorts.has_key?(field)
-          instance_exec(collection, order, &column_sorts[field])
-        else
-          sort(collection, field, order)
-        end
       end
 
       def table
@@ -149,15 +118,11 @@ module Trestle
       end
 
       def return_locations
-        @return_locations ||= {
-          create:  Proc.new { |instance| path(:show, id: to_param(instance)) },
-          update:  Proc.new { |instance| path(:show, id: to_param(instance)) },
-          destroy: Proc.new { path(:index) }
-        }
+        @return_locations ||= {}
       end
 
-      def return_location(action, instance=nil)
-        instance_exec(instance, &return_locations[action])
+      def build(&block)
+        Resource::Builder.build(self, &block)
       end
 
     private

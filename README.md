@@ -4,10 +4,10 @@
 
 # Trestle
 
-[![RubyGem](https://img.shields.io/gem/v/trestle.svg?style=flat-square&colorB=4065a9)](https://rubygems.org/gems/trestle)
-[![Travis](https://img.shields.io/travis/TrestleAdmin/trestle.svg?style=flat-square)](https://travis-ci.org/TrestleAdmin/trestle)
-[![Code Climate](https://img.shields.io/codeclimate/github/TrestleAdmin/trestle.svg?style=flat-square)](https://codeclimate.com/github/TrestleAdmin/trestle)
-[![Coveralls](https://img.shields.io/coveralls/TrestleAdmin/trestle.svg?style=flat-square)](https://coveralls.io/github/TrestleAdmin/trestle)
+[![RubyGem](https://img.shields.io/gem/v/trestle.svg?style=flat&colorB=4065a9)](https://rubygems.org/gems/trestle)
+[![Travis](https://img.shields.io/travis/TrestleAdmin/trestle.svg?style=flat)](https://travis-ci.org/TrestleAdmin/trestle)
+[![Coveralls](https://img.shields.io/coveralls/TrestleAdmin/trestle.svg?style=flat)](https://coveralls.io/github/TrestleAdmin/trestle)
+[![Code Climate](https://api.codeclimate.com/v1/badges/c529a7a9c500ed81baed/maintainability)](https://codeclimate.com/github/TrestleAdmin/trestle)
 
 > A modern, responsive admin framework for Ruby on Rails
 
@@ -87,12 +87,13 @@ end
 
 The following plugins are currently available:
 
-| Name | Description | GitHub |
+| Name | Description | Links |
 | --- | --- | --- |
-| *trestle-auth* | User authentication plugin | https://github.com/TrestleAdmin/trestle-auth |
-| *trestle-search* | Search plugin | https://github.com/TrestleAdmin/trestle-search |
-| *trestle-tinymce* | TinyMCE (WYSIWYG editor) integration | https://github.com/TrestleAdmin/trestle-tinymce |
-| *trestle-simplemde* | SimpleMDE (Markdown editor) integration | https://github.com/TrestleAdmin/trestle-simplemde |
+| *trestle-auth* | User authentication plugin | [GitHub](https://github.com/TrestleAdmin/trestle-auth) \| [RubyGems](https://rubygems.org/gems/trestle-auth) |
+| *trestle-search* | Search plugin | [GitHub](https://github.com/TrestleAdmin/trestle-search) \| [RubyGems](https://rubygems.org/gems/trestle-search) |
+| *trestle-tinymce* | [TinyMCE](https://www.tinymce.com/) (WYSIWYG editor) integration | [GitHub](https://github.com/TrestleAdmin/trestle-tinymce) \| [RubyGems](https://rubygems.org/gems/trestle-tinymce) |
+| *trestle-simplemde* | [SimpleMDE](https://simplemde.com/) (Markdown editor) integration | [GitHub](https://github.com/TrestleAdmin/trestle-simplemde) \| [RubyGems](https://rubygems.org/gems/trestle-simplemde) |
+| *trestle-sidekiq* | [Sidekiq](http://sidekiq.org/) integration | [GitHub](https://github.com/TrestleAdmin/trestle-sidekiq) \| [RubyGems](https://rubygems.org/gems/trestle-sidekiq) |
 
 
 ## License

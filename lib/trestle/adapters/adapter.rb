@@ -61,6 +61,18 @@ module Trestle
         raise NotImplementedError
       end
 
+      # Finalizes a collection so that it can be rendered within the index view.
+      #
+      # In most cases (e.g. ActiveRecord), no finalization is required. However if you are using a search library then
+      # you may need to explicitly execute the search, or access the models via a #records or #objects method.
+      #
+      # collection - The collection to finalize
+      #
+      # Returns an enumerable collection of instances.
+      def finalize_collection(collection)
+        collection
+      end
+
       # Decorates a collection for rendering by the index view.
       # Decorating is the final step in preparing the collection for the view.
       #
@@ -80,15 +92,6 @@ module Trestle
       # Returns the URL representation of the instance.
       def to_param(instance)
         instance.id
-      end
-
-      # Unscopes a collection so that it can be merged with other scopes without duplication or interference.
-      #
-      # scope - The scope to unscope
-      #
-      # Returns a scope object.
-      def unscope(scope)
-        scope
       end
 
       # Merges scopes together for Trestle scope application and counting.
@@ -131,7 +134,9 @@ module Trestle
       # Returns a Kaminari-compatible scope corresponding to a single page.
       def paginate(collection, params)
         collection = Kaminari.paginate_array(collection.to_a) unless collection.respond_to?(:page)
-        collection.page(params[:page])
+        per_page = admin.pagination_options[:per]
+
+        collection.page(params[:page]).per(per_page)
       end
 
       # Filters the submitted form parameters and returns a whitelisted attributes 'hash'

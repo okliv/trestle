@@ -93,6 +93,10 @@
   }
 }
 
+.nav-tooltip {
+  display: none !important;
+}
+
 @mixin collapsed-nav-header {
   height: 0;
   padding: 10px 15px 15px;
@@ -124,6 +128,10 @@
 }
 
 @include tablet {
+  .nav-tooltip {
+    display: block !important;
+  }
+
   .app-nav {
     .nav-label, .nav-badge {
       display: none;
@@ -138,8 +146,10 @@
         display: block;
       }
     }
+  }
 
-    .expanded & {
+  .sidebar-expanded {
+    .app-nav {
       .nav-header a {
         height: auto;
         padding: 5px 20px;
@@ -159,23 +169,33 @@
       .nav-label  { display: inline; }
       .nav-badge  { display: block; }
     }
+
+    .nav-tooltip {
+      display: none !important;
+    }
   }
 }
 
 @include desktop {
-  .collapsed .app-nav {
-    .nav-label, .nav-badge {
-      display: none;
-    }
-
-    .nav-header a {
-      @include collapsed-nav-header;
-    }
-
-    .collapsed .nav-header a {
-      &::after {
-        display: block;
+  .sidebar-collapsed {
+    .app-nav {
+      .nav-label, .nav-badge {
+        display: none;
       }
+
+      .nav-header a {
+        @include collapsed-nav-header;
+      }
+
+      .collapsed .nav-header a {
+        &::after {
+          display: block;
+        }
+      }
+    }
+
+    .nav-tooltip {
+      display: block !important;
     }
   }
 }

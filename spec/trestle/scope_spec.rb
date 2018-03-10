@@ -30,13 +30,27 @@ describe Trestle::Scope do
   end
 
   describe "#apply" do
-    let(:collection) { double }
+    let(:collection) { [1, 2, 3] }
 
     context "with an explicit block" do
-      let(:block) { Proc.new { |collection| [1,2,3] } }
+      context "with no parameters" do
+        let(:block) do
+          -> { [4, 5, 6] }
+        end
 
-      it "calls the block with the given collection" do
-        expect(scope.apply(collection)).to eq([1,2,3])
+        it "calls the block and returns the result" do
+          expect(scope.apply(collection)).to eq([4, 5, 6])
+        end
+      end
+
+      context "with one parameter" do
+        let(:block) do
+          ->(collection) { collection + [4] }
+        end
+
+        it "calls the block with the given collection and returns the result" do
+          expect(scope.apply(collection)).to eq([1, 2, 3, 4])
+        end
       end
     end
 
@@ -52,7 +66,6 @@ describe Trestle::Scope do
     let(:collection) { double }
 
     it "returns the count of the applied scope" do
-      expect(admin).to receive(:unscope).with(collection).and_return(collection)
       expect(collection).to receive(:my_scope).and_return([1,2])
       expect(admin).to receive(:merge_scopes).with(collection, [1,2]).and_return([3,4])
       expect(admin).to receive(:count).with([3,4]).and_return(2)
@@ -61,16 +74,25 @@ describe Trestle::Scope do
   end
 
   describe "#active?" do
-    let(:params) { double }
-
-    it "returns true if the admin's active scopes include this scope" do
-      expect(admin).to receive(:scopes_for).with(params).and_return([scope])
-      expect(scope.active?(params)).to be true
+    it "returns true if the scope param includes the scope name" do
+      expect(scope.active?(scope: "my_scope")).to be true
     end
 
-    it "returns false if the admin's active scopes do not include this scope" do
-      expect(admin).to receive(:scopes_for).with(params).and_return([])
-      expect(scope.active?(params)).to be false
+    it "returns false if the scope param does not match the scope name or is missing" do
+      expect(scope.active?({ scope: "another_scope" })).to be false
+      expect(scope.active?({})).to be false
+    end
+
+    context "scope is default" do
+      let(:options) { { default: true } }
+
+      it "returns true if no scopes are enabled" do
+        expect(scope.active?({})).to be true
+      end
+
+      it "returns false if another scope is enabled" do
+        expect(scope.active?({ scope: "another_scope" })).to be false
+      end
     end
   end
 
