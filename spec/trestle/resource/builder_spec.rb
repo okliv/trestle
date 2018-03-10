@@ -1,19 +1,18 @@
 require 'spec_helper'
 
-class Trestle::ApplicationController < ActionController::Base; end
-
 describe Trestle::Resource::Builder do
   before(:each) do
     Object.send(:remove_const, :TestAdmin) if Object.const_defined?(:TestAdmin)
+    stub_const("Trestle::ApplicationController", Class.new(ActionController::Base))
   end
 
   it "creates a top-level Resource subclass" do
-    Trestle::Resource::Builder.build(:test)
+    Trestle::Resource::Builder.create(:test)
     expect(::TestAdmin).to be < Trestle::Resource
   end
 
   it "creates an AdminController class" do
-    Trestle::Resource::Builder.build(:test)
+    Trestle::Resource::Builder.create(:test)
     expect(::TestAdmin::AdminController).to be < Trestle::Resource::Controller
     expect(::TestAdmin::AdminController.admin).to eq(::TestAdmin)
   end
@@ -22,7 +21,7 @@ describe Trestle::Resource::Builder do
     it "returns the admin's adapter instance" do
       adapter = nil
 
-      Trestle::Resource::Builder.build(:test) do
+      Trestle::Resource::Builder.create(:test) do
         adapter = self.adapter
       end
 
@@ -30,7 +29,7 @@ describe Trestle::Resource::Builder do
     end
 
     it "evaluates the given block in the context of the adapter" do
-      Trestle::Resource::Builder.build(:test) do
+      Trestle::Resource::Builder.create(:test) do
         adapter do
           def custom_method
             "Custom"
@@ -47,7 +46,7 @@ describe Trestle::Resource::Builder do
       adapter = double
       CustomAdapter = double(new: adapter)
 
-      Trestle::Resource::Builder.build(:test) do
+      Trestle::Resource::Builder.create(:test) do
         self.adapter = CustomAdapter
       end
 
@@ -55,9 +54,21 @@ describe Trestle::Resource::Builder do
     end
   end
 
+  describe "#remove_action" do
+    it "removes the given action(s) from the resource" do
+      Trestle::Resource::Builder.create(:test) do
+        remove_action :edit, :update
+      end
+
+      expect(::TestAdmin.actions).to eq([:index, :show, :new, :create, :destroy])
+      expect(::TestAdmin::AdminController).not_to respond_to(:edit)
+      expect(::TestAdmin::AdminController).not_to respond_to(:update)
+    end
+  end
+
   describe "#collection" do
     it "sets an explicit collection block" do
-      Trestle::Resource::Builder.build(:test) do
+      Trestle::Resource::Builder.create(:test) do
         collection do
           [1, 2, 3]
         end
@@ -67,9 +78,19 @@ describe Trestle::Resource::Builder do
     end
   end
 
-  describe "#instance" do
+  describe "#find_instance" do
     it "sets an explicit instance block" do
-      Trestle::Resource::Builder.build(:test) do
+      Trestle::Resource::Builder.create(:test) do
+        find_instance do |params|
+          params[:id]
+        end
+      end
+
+      expect(::TestAdmin.find_instance(id: 123)).to eq(123)
+    end
+
+    it "is aliased as #instance" do
+      Trestle::Resource::Builder.create(:test) do
         instance do |params|
           params[:id]
         end
@@ -81,7 +102,7 @@ describe Trestle::Resource::Builder do
 
   describe "#build_instance" do
     it "sets an explicit build_instance block" do
-      Trestle::Resource::Builder.build(:test) do
+      Trestle::Resource::Builder.create(:test) do
         build_instance do |params|
           params
         end
@@ -93,7 +114,7 @@ describe Trestle::Resource::Builder do
 
   describe "#update_instance" do
     it "sets an explicit update_instance block" do
-      Trestle::Resource::Builder.build(:test) do
+      Trestle::Resource::Builder.create(:test) do
         update_instance do |instance, params|
           instance.update_attributes(params)
         end
@@ -109,7 +130,7 @@ describe Trestle::Resource::Builder do
     it "sets an explicit save_instance block" do
       repository = double
 
-      Trestle::Resource::Builder.build(:test) do
+      Trestle::Resource::Builder.create(:test) do
         save_instance do |instance|
           repository.save(instance)
         end
@@ -126,7 +147,7 @@ describe Trestle::Resource::Builder do
       repository = double
       instance = double
 
-      Trestle::Resource::Builder.build(:test) do
+      Trestle::Resource::Builder.create(:test) do
         delete_instance do |instance|
           repository.delete(instance)
         end
@@ -139,7 +160,7 @@ describe Trestle::Resource::Builder do
 
   describe "#params" do
     it "sets an explicit permitted_params block" do
-      Trestle::Resource::Builder.build(:test) do
+      Trestle::Resource::Builder.create(:test) do
         params do |params|
           params.require(:test).permit(:name)
         end
@@ -152,7 +173,7 @@ describe Trestle::Resource::Builder do
 
   describe "#merge_scopes" do
     it "sets an explicit merge_scopes block" do
-      Trestle::Resource::Builder.build(:test) do
+      Trestle::Resource::Builder.create(:test) do
         merge_scopes do |scope, other|
           scope.combine(other)
         end
@@ -168,35 +189,37 @@ describe Trestle::Resource::Builder do
 
   describe "#sort" do
     it "sets an explicit sort block" do
-      Trestle::Resource::Builder.build(:test) do
+      Trestle::Resource::Builder.create(:test) do
         sort do |collection, field, order|
           collection.order(field => order)
         end
       end
 
       collection = double
-      expect(collection).to receive(:order).with(name: "asc").and_return([1, 2, 3])
-      expect(::TestAdmin.sort(collection, :name, "asc")).to eq([1, 2, 3])
+      expect(collection).to receive(:order).with(name: :asc).and_return([1, 2, 3])
+      expect(::TestAdmin.sort(collection, :name, :asc)).to eq([1, 2, 3])
     end
   end
 
   describe "#sort_column" do
     it "sets a column sort block" do
-      Trestle::Resource::Builder.build(:test) do
+      Trestle::Resource::Builder.create(:test) do
         sort_column(:field) do |collection, order|
           collection.order(:field => order)
         end
       end
 
       collection = double
-      expect(collection).to receive(:order).with(field: "asc").and_return([1, 2, 3])
-      expect(::TestAdmin.apply_sorting(collection, sort: "field", order: "asc")).to eq([1, 2, 3])
+      allow(::TestAdmin).to receive(:initialize_collection).and_return(collection)
+
+      expect(collection).to receive(:order).with(field: :asc).and_return([1, 2, 3])
+      expect(::TestAdmin.prepare_collection(sort: "field", order: "asc")).to eq([1, 2, 3])
     end
   end
 
   describe "#paginate" do
     it "sets an explicit paginate block" do
-      Trestle::Resource::Builder.build(:test) do
+      Trestle::Resource::Builder.create(:test) do
         paginate do |collection, params|
           collection.paginate(page: params[:page])
         end
@@ -210,7 +233,7 @@ describe Trestle::Resource::Builder do
 
   describe "#count" do
     it "sets an explicit count block" do
-      Trestle::Resource::Builder.build(:test) do
+      Trestle::Resource::Builder.create(:test) do
         count do |collection|
           collection.total_count
         end
@@ -223,7 +246,7 @@ describe Trestle::Resource::Builder do
 
   describe "#decorate_collection" do
     it "sets an explicit count block" do
-      Trestle::Resource::Builder.build(:test) do
+      Trestle::Resource::Builder.create(:test) do
         decorate_collection do |collection|
           collection.decorate
         end
@@ -239,7 +262,7 @@ describe Trestle::Resource::Builder do
     it "sets a decorator class" do
       class TestDecorator; end
 
-      Trestle::Resource::Builder.build(:test) do
+      Trestle::Resource::Builder.create(:test) do
         decorator TestDecorator
       end
 
@@ -253,7 +276,7 @@ describe Trestle::Resource::Builder do
     it "defines a scope on the admin" do
       b = Proc.new {}
 
-      Trestle::Resource::Builder.build(:test) do
+      Trestle::Resource::Builder.create(:test) do
         scope :my_scope, label: "Custom Label", &b
       end
 
@@ -266,13 +289,41 @@ describe Trestle::Resource::Builder do
       it "uses the proc as the block" do
         b = Proc.new {}
 
-        Trestle::Resource::Builder.build(:test) do
+        Trestle::Resource::Builder.create(:test) do
           scope :my_scope, b, label: "Custom Label"
         end
 
         expect(::TestAdmin.scopes).to include(my_scope: be_a(Trestle::Scope))
         expect(::TestAdmin.scopes[:my_scope].options).to eq(label: "Custom Label")
         expect(::TestAdmin.scopes[:my_scope].block).to eq(b)
+      end
+    end
+  end
+
+  describe "#return_to" do
+    context "given options[:on]" do
+      it "sets a return location block for the given action" do
+        b = Proc.new {}
+
+        Trestle::Resource::Builder.create(:test) do
+          return_to on: :create, &b
+        end
+
+        expect(::TestAdmin.return_locations[:create]).to eq(b)
+      end
+    end
+
+    context "without options[:on]" do
+      it "sets the return location block for all actions" do
+        b = Proc.new {}
+
+        Trestle::Resource::Builder.create(:test) do
+          return_to &b
+        end
+
+        expect(::TestAdmin.return_locations[:create]).to eq(b)
+        expect(::TestAdmin.return_locations[:update]).to eq(b)
+        expect(::TestAdmin.return_locations[:destroy]).to eq(b)
       end
     end
   end

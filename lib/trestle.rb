@@ -19,6 +19,7 @@ module Trestle
   autoload :Configuration
   autoload :Display
   autoload :Form
+  autoload :ModelName
   autoload :Navigation
   autoload :Options
   autoload :Reloader
@@ -32,12 +33,14 @@ module Trestle
   self.admins = {}
 
   def self.admin(name, options={}, &block)
-    admin = Admin::Builder.build(name, options, &block)
-    self.admins[admin.admin_name] = admin
+    register(Admin::Builder.create(name, options, &block))
   end
 
   def self.resource(name, options={}, &block)
-    admin = Resource::Builder.build(name, options, &block)
+    register(Resource::Builder.create(name, options, &block))
+  end
+
+  def self.register(admin)
     self.admins[admin.admin_name] = admin
   end
 
@@ -55,7 +58,7 @@ module Trestle
   end
 
   def self.navigation
-    Navigation.new(config.menus + admins.values.map(&:menu).compact)
+    Navigation.build(config.menus + admins.values.map(&:menu).compact)
   end
 end
 

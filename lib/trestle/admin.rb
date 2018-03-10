@@ -8,15 +8,29 @@ module Trestle
     class << self
       attr_accessor :menu
 
-      attr_accessor :table
       attr_accessor :form
 
       attr_accessor :additional_routes
 
       attr_writer :options
+      attr_writer :breadcrumb
 
       def options
         @options ||= {}
+      end
+
+      def tables
+        @tables ||= {}
+      end
+
+      # Deprecated: Use `tables[:index]` instead
+      def table
+        tables[:index]
+      end
+
+      # Deprecated: Use `tables[:index]=` instead
+      def table=(table)
+        tables[:index] = table
       end
 
       def breadcrumbs
@@ -24,7 +38,15 @@ module Trestle
       end
 
       def breadcrumb
-        Breadcrumb.new(admin_name.titleize.pluralize, path)
+        if @breadcrumb
+          Breadcrumb.cast(@breadcrumb.call)
+        else
+          default_breadcrumb
+        end
+      end
+
+      def default_breadcrumb
+        Breadcrumb.new(I18n.t("admin.breadcrumbs.#{admin_name}", default: admin_name.titleize), path)
       end
 
       def admin_name
@@ -47,6 +69,10 @@ module Trestle
         Engine.routes.url_for(options.merge(controller: controller_namespace, action: action, only_path: true))
       end
 
+      def actions
+        [:index]
+      end
+
       def routes
         admin = self
 
@@ -61,6 +87,10 @@ module Trestle
 
       def railtie_routes_url_helpers(include_path_helpers=true)
         Trestle.railtie_routes_url_helpers(include_path_helpers)
+      end
+
+      def build(&block)
+        Admin::Builder.build(self, &block)
       end
     end
   end

@@ -17,8 +17,16 @@ module Trestle
       @columns = []
     end
 
+    def admin
+      Trestle.lookup(options[:admin]) if options.key?(:admin)
+    end
+
     def sortable?
       options[:sortable] == true
+    end
+
+    def autolink?
+      options[:autolink] != false
     end
 
     def renderer(template)
@@ -41,7 +49,11 @@ module Trestle
       end
 
       def columns
-        @columns ||= @table.columns.map { |column| column.renderer(@template) }
+        @columns ||= row.columns
+      end
+
+      def id
+        options[:id]
       end
 
       def classes

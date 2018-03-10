@@ -38,7 +38,8 @@
     vertical-align: 0;
   }
 
-  .nav-header {
+  .nav-header a {
+    position: relative;
     color: rgba(white, 0.25);
 
     text-transform: uppercase;
@@ -46,6 +47,24 @@
     font-size: 11px;
 
     padding: 5px 20px;
+
+    &::after {
+      @extend .ion;
+      content: $ionicon-var-arrow-down-b;
+
+      float: right;
+      margin-top: 2px;
+
+      opacity: 0.75;
+    }
+
+    &:hover, &:focus {
+      background: none;
+
+      &::before, &::after {
+        opacity: 1 !important;
+      }
+    }
   }
 
   .active a {
@@ -62,50 +81,121 @@
     position: relative;
     top: 1px;
   }
+
+  .collapsed {
+    li {
+      display: none;
+
+      &.nav-header {
+        display: block;
+      }
+    }
+  }
+}
+
+.nav-tooltip {
+  display: none !important;
 }
 
 @mixin collapsed-nav-header {
-  border-bottom: 1px solid rgba(white, 0.1);
   height: 0;
-  margin: 0 15px 14px;
-  padding: 5px 0;
+  padding: 10px 15px 15px;
   text-indent: -99999px;
+
+  &::after {
+    display: none;
+
+    position: absolute;
+    top: 4px;
+    left: 50%;
+    margin-left: -3px;
+
+    text-indent: 0;
+  }
+
+  &::before {
+    content: "";
+
+    position: absolute;
+    left: 15px;
+    right: 15px;
+    top: 50%;
+    margin-top: -4px;
+
+    border-bottom: 1px solid rgba(white, 0.1);
+    opacity: 0.75;
+  }
 }
 
 @include tablet {
+  .nav-tooltip {
+    display: block !important;
+  }
+
   .app-nav {
     .nav-label, .nav-badge {
       display: none;
     }
 
-    .nav-header {
+    .nav-header a {
       @include collapsed-nav-header;
     }
 
-    .expanded & {
-      .nav-header {
+    .collapsed .nav-header a {
+      &::after {
         display: block;
-        border-bottom: none;
+      }
+    }
+  }
+
+  .sidebar-expanded {
+    .app-nav {
+      .nav-header a {
         height: auto;
-        margin: 0;
         padding: 5px 20px;
         text-indent: 0;
+
+        &::before {
+          display: none;
+        }
+
+        &::after {
+          display: block;
+          position: static;
+          margin-left: 0;
+        }
       }
 
       .nav-label  { display: inline; }
       .nav-badge  { display: block; }
     }
+
+    .nav-tooltip {
+      display: none !important;
+    }
   }
 }
 
 @include desktop {
-  .collapsed .app-nav {
-    .nav-label, .nav-badge {
-      display: none;
+  .sidebar-collapsed {
+    .app-nav {
+      .nav-label, .nav-badge {
+        display: none;
+      }
+
+      .nav-header a {
+        @include collapsed-nav-header;
+      }
+
+      .collapsed .nav-header a {
+        &::after {
+          display: block;
+        }
+      }
     }
 
-    .nav-header {
-      @include collapsed-nav-header;
+    .nav-tooltip {
+      display: block !important;
     }
   }
 }

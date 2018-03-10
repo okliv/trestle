@@ -16,6 +16,15 @@ describe Trestle::Table do
     it { is_expected.to be_sortable }
   end
 
+  context "without options[:autolink]" do
+    it { is_expected.to be_autolink }
+  end
+
+  context "with options[:autolink] = false" do
+    subject(:table) { Trestle::Table.new(autolink: false) }
+    it { is_expected.not_to be_autolink }
+  end
+
   describe "#renderer" do
     let(:template) { double }
 
@@ -28,6 +37,11 @@ describe Trestle::Table do
     it "appends additional classes from options" do
       table = Trestle::Table.new(class: "custom-table")
       expect(table.renderer(template).classes).to eq(["trestle-table", "custom-table"])
+    end
+
+    it "sets the id from options" do
+      table = Trestle::Table.new(id: "custom-id")
+      expect(table.renderer(template).id).to eq("custom-id")
     end
 
     it "returns the data from options" do

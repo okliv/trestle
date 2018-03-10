@@ -73,13 +73,18 @@ describe Trestle::Table::Column do
     end
 
     describe "#content" do
+      before(:each) do
+        allow(template).to receive(:format_value) { |v| v }
+      end
+
       context "with a block" do
         subject(:column) do
           Trestle::Table::Column.new(table, :my_field, options) { |instance| instance }
         end
 
         it "returns the result of the block" do
-          allow(template).to receive(:capture).and_return(instance)
+          allow(template).to receive(:capture).and_yield
+          allow(template).to receive(:instance_exec).and_return(instance)
           expect(renderer.content(instance)).to eq(instance)
         end
       end
@@ -91,84 +96,13 @@ describe Trestle::Table::Column do
         end
       end
 
-      describe "formatting" do
-        it "automatically formats timestamp values" do
-          time = Time.now
-          timestamp = double
-
-          expect(instance).to receive(:my_field).and_return(time)
-          expect(template).to receive(:timestamp).with(time).and_return(timestamp)
-
-          expect(renderer.content(instance)).to eq(timestamp)
-        end
-
-        it "automatically formats date values" do
-          date = Date.today
-          datestamp = double
-
-          expect(instance).to receive(:my_field).and_return(date)
-          expect(template).to receive(:datestamp).with(date).and_return(datestamp)
-
-          expect(renderer.content(instance)).to eq(datestamp)
-        end
-
-        it "returns 'none' text for nil values" do
-          blank = double
-
-          expect(instance).to receive(:my_field).and_return(nil)
-          expect(template).to receive(:content_tag).with(:span, "None", class: "blank").and_return(blank)
-
-          expect(renderer.content(instance)).to eq(blank)
-        end
-
-        it "automatically formats true values" do
-          status = double
-          icon = double
-
-          expect(instance).to receive(:my_field).and_return(true)
-          expect(template).to receive(:icon).with("fa fa-check").and_return(icon)
-          expect(template).to receive(:status_tag).with(icon, :success).and_return(status)
-
-          expect(renderer.content(instance)).to eq(status)
-        end
-
-        it "leaves false values empty" do
-          expect(instance).to receive(:my_field).and_return(false)
-          expect(renderer.content(instance)).to be_nil
-        end
-
-        it "calls display for model-like values" do
-          representation = double
-          model = double(id: "123")
-
-          expect(instance).to receive(:my_field).and_return(model)
-          allow(template).to receive(:admin_link_to).and_return(representation)
-          expect(template).to receive(:display).with(model).and_return(representation)
-          expect(renderer.content(instance)).to eq(representation)
-        end
-
-        context "options[:format] = :currency" do
-          let(:options) { { format: :currency } }
-
-          it "formats value as currency" do
-            currency = double
-
-            expect(instance).to receive(:my_field).and_return(123.45)
-            expect(template).to receive(:number_to_currency).with(123.45).and_return(currency)
-            expect(renderer.content(instance)).to eq(currency)
-          end
-        end
-      end
-
       describe "linking" do
         it "automatically links model-like values to their admin if available" do
           link = double
-          representation = double
           model = double(id: "123")
 
           expect(instance).to receive(:my_field).and_return(model)
-          allow(template).to receive(:display).with(model).and_return(representation)
-          expect(template).to receive(:admin_link_to).with(representation, model).and_return(link)
+          expect(template).to receive(:admin_link_to).with(model, model).and_return(link)
           expect(renderer.content(instance)).to eq(link)
         end
 
@@ -176,13 +110,11 @@ describe Trestle::Table::Column do
           let(:options) { { link: false } }
 
           it "does not link model-like values" do
-            representation = double
             model = double(id: "123")
 
             expect(instance).to receive(:my_field).and_return(model)
-            allow(template).to receive(:display).with(model).and_return(representation)
             expect(template).not_to receive(:admin_link_to)
-            expect(renderer.content(instance)).to eq(representation)
+            expect(renderer.content(instance)).to eq(model)
           end
         end
 

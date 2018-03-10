@@ -29,7 +29,7 @@ describe Trestle::Configuration do
   end
 
   it "has a display methods configuration option" do
-    expect(config).to have_accessor(:display_methods).with_default([:display_name, :full_name, :name, :title, :username, :login, :email, :to_s])
+    expect(config).to have_accessor(:display_methods).with_default([:display_name, :full_name, :name, :title, :username, :login, :email])
   end
 
   it "has a persistent params configuration option" do
@@ -49,6 +49,10 @@ describe Trestle::Configuration do
 
   it "has a root breadcrumbs configuration option" do
     expect(config).to have_accessor(:root_breadcrumbs).with_default([Trestle::Breadcrumb.new("Home", "/admin")])
+  end
+
+  it "has a debug form errors configuration option" do
+    expect(config).to have_accessor(:debug_form_errors).with_default(false)
   end
 
   it "has no default menu blocks" do
@@ -96,6 +100,53 @@ describe Trestle::Configuration do
     it "registers a form field type" do
       expect(Trestle::Form::Builder).to receive(:register).with(:custom, klass)
       config.form_field :custom, klass
+    end
+  end
+
+  it "has a list of load paths" do
+    expect(config).to have_accessor(:load_paths)
+    expect(config.load_paths).to be_an(Array)
+  end
+
+  it "has no default before actions" do
+    expect(config.before_actions).to eq([])
+  end
+
+  it "has no default after actions" do
+    expect(config.after_actions).to eq([])
+  end
+
+  it "has no default around actions" do
+    expect(config.around_actions).to eq([])
+  end
+
+  describe "#before_action" do
+    let(:options) { double }
+    let(:block) { Proc.new {} }
+
+    it "registers a before action" do
+      config.before_action(options, &block)
+      expect(config.before_actions).to eq([Trestle::Configuration::Action.new(options, block)])
+    end
+  end
+
+  describe "#after_action" do
+    let(:options) { double }
+    let(:block) { Proc.new {} }
+
+    it "registers an afer action" do
+      config.after_action(options, &block)
+      expect(config.after_actions).to eq([Trestle::Configuration::Action.new(options, block)])
+    end
+  end
+
+  describe "#around_action" do
+    let(:options) { double }
+    let(:block) { Proc.new {} }
+
+    it "registers an around action" do
+      config.around_action(options, &block)
+      expect(config.around_actions).to eq([Trestle::Configuration::Action.new(options, block)])
     end
   end
 end

@@ -19,17 +19,33 @@ module Trestle
           @row, @template = row, template
         end
 
+        def columns
+          table.columns.map { |column| column.renderer(@template) }
+        end
+
+        def render(instance)
+          @template.content_tag(:tr, options(instance)) do
+            @template.safe_join(columns.map { |column| column.render(instance) }, "\n")
+          end
+        end
+
         def options(instance)
           options = Trestle::Options.new
-          options.merge!(data: { url: admin_url_for(instance) }) if table.options[:admin]
+
+          if table.admin && table.autolink?
+            options.merge!(data: { url: admin_url_for(instance) })
+            options.merge!(data: { behavior: "dialog" }) if table.admin.form.dialog?
+          end
+
           options.merge!(@row.options)
           options.merge!(@template.instance_exec(instance, &@row.block)) if @row.block
+
           options
         end
 
       protected
         def admin_url_for(instance)
-          @template.admin_url_for(instance, admin: table.options[:admin])
+          @template.admin_url_for(instance, admin: table.admin)
         end
       end
     end

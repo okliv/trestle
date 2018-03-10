@@ -8,6 +8,11 @@ describe Trestle::Navigation::Item do
     expect(item.label).to eq("Test")
   end
 
+  it "can override the label from options" do
+    item = Trestle::Navigation::Item.new(:test, nil, label: "Custom Label")
+    expect(item.label).to eq("Custom Label")
+  end
+
   it "has a default priority of 0" do
     expect(item.priority).to eq(0)
   end
@@ -39,6 +44,20 @@ describe Trestle::Navigation::Item do
     i4 = Trestle::Navigation::Item.new(:test4, nil, priority: 50)
 
     expect([i1, i2, i3, i4].sort).to eq([i2, i1, i4, i3])
+  end
+
+  it "is visible by default" do
+    expect(item.visible?(self)).to be true
+  end
+
+  it "is not visible if options[:if] is provided and evaluates to false" do
+    item = Trestle::Navigation::Item.new(:test, nil, if: -> { false })
+    expect(item.visible?(self)).to be false
+  end
+
+  it "is not visible if options[:unless] if provided and evaluates to true" do
+    item = Trestle::Navigation::Item.new(:test, nil, unless: -> { true })
+    expect(item.visible?(self)).to be false
   end
 
   context "with a badge" do
