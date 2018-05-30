@@ -4,19 +4,6 @@ cs:
     footer: "Poháněno systémem Trestle"
     version: "Verze"
 
-    flash:
-      success:
-        title: "Akce úspěšně dokončena!"
-        create: "Položka byla vytvořena."
-        update: "Položka byla aktualizováná."
-        destroy: "Položka byla smazána."
-
-      failure:
-        title: "Nastala chyba!"
-        create: "Prosím opravte chyby zvýrazněné níže."
-        update: "Prosím opravte chyby zvýrazněné níže."
-        destroy: "Položku nebylo možné smazat."
-
     helpers:
       page_entries_info:
         one_page:
@@ -35,8 +22,17 @@ cs:
       no_template: "Pro přizpůsobení šablony vytvořte  <code>%{path}</code>."
       no_form: "Pro přidání formuláře nadefinujte form blok, nebo vytvořte soubor <code>_form.html</code>."
 
+    ui:
+      toggle_navigation: "Přepnout navigaci"
+      toggle_sidebar: "Přepnout boční panel"
+
     dialog:
       error: "Požadavek nemohl být dokončen."
+
+    confirmation:
+      title: "Jste si jisti?"
+      delete: "Ano"
+      cancel: "Nemazat"
 
   admin:
     titles:
@@ -53,6 +49,34 @@ cs:
     breadcrumbs:
       home: "Úvod"
 
+    flash:
+      create:
+        success:
+          title: "Akce úspěšně dokončena!"
+          message: "Položka byla vytvořena."
+
+        failure:
+          title: "Nastala chyba!"
+          message: "Prosím opravte chyby zvýrazněné níže."
+
+      update:
+        success:
+          title: "Akce úspěšně dokončena!"
+          message: "Položka byla aktualizováná."
+
+        failure:
+          title: "Nastala chyba!"
+          message: "Prosím opravte chyby zvýrazněné níže."
+
+      destroy:
+        success:
+          title: "Akce úspěšně dokončena!"
+          message: "Položka byla smazána."
+
+        failure:
+          title: "Nastala chyba!"
+          message: "Položku nebylo možné smazat."
+
     table:
       headers:
         id: "ID"
@@ -61,17 +85,8 @@ cs:
       select:
         prompt: "- Prosím vyberte -"
 
-    confirmation:
-      title: "Jste si jisti?"
-      delete: "Ano"
-      cancel: "Nemazat"
-
-    ui:
-      toggle_navigation: "Přepnout navigaci"
-      toggle_sidebar: "Přepnout boční panel"
-
     format:
-      blank: "Žádný"
+      blank: "-"
 
     datepicker:
       formats:

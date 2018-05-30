@@ -1,8 +1,7 @@
 require 'spec_helper'
 
-describe Trestle::Admin::Builder do
+describe Trestle::Admin::Builder, remove_const: true do
   before(:each) do
-    Object.send(:remove_const, :TestAdmin) if Object.const_defined?(:TestAdmin)
     stub_const("Trestle::ApplicationController", Class.new(ActionController::Base))
   end
 
@@ -14,7 +13,6 @@ describe Trestle::Admin::Builder do
   context "with a module scope" do
     before(:each) do
       module Scoped; end
-      Scoped.send(:remove_const, :TestAdmin) if Scoped.const_defined?(:TestAdmin)
     end
 
     it "creates the Admin subclass within the module scope" do
@@ -98,16 +96,28 @@ describe Trestle::Admin::Builder do
   end
 
   describe "#table" do
-    it "builds a sortable table" do
+    it "builds an index table" do
       Trestle::Admin::Builder.create(:test) do
         table custom: "option" do
           column :test
         end
       end
 
-      expect(::TestAdmin.table).to be_a(Trestle::Table)
-      expect(::TestAdmin.table.options).to eq(custom: "option", sortable: true, admin: ::TestAdmin)
-      expect(::TestAdmin.table.columns[0].field).to eq(:test)
+      expect(::TestAdmin.tables[:index]).to be_a(Trestle::Table)
+      expect(::TestAdmin.tables[:index].options).to eq(custom: "option")
+      expect(::TestAdmin.tables[:index].columns[0].field).to eq(:test)
+    end
+
+    it "builds a named table" do
+      Trestle::Admin::Builder.create(:test) do
+        table :named, custom: "option" do
+          column :test
+        end
+      end
+
+      expect(::TestAdmin.tables[:named]).to be_a(Trestle::Table)
+      expect(::TestAdmin.tables[:named].options).to eq(custom: "option")
+      expect(::TestAdmin.tables[:named].columns[0].field).to eq(:test)
     end
   end
 
@@ -146,6 +156,14 @@ describe Trestle::Admin::Builder do
       end
 
       expect(::TestAdmin.breadcrumb).to eq(b)
+    end
+
+    it "allows the breadcrumb to be disabled" do
+      Trestle::Admin::Builder.create(:test) do
+        breadcrumb false
+      end
+
+      expect(::TestAdmin.breadcrumb).to be_nil
     end
   end
 end

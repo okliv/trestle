@@ -34,6 +34,9 @@ module Trestle
         controller.instance_variable_set("@admin", admin)
 
         admin.build(&block)
+        admin.validate!
+
+        admin
       end
 
       def menu(*args, &block)
@@ -45,12 +48,7 @@ module Trestle
       end
 
       def table(name_or_options={}, options={}, &block)
-        if name_or_options.is_a?(Hash)
-          name, options = :index, name_or_options.reverse_merge(admin: admin, sortable: true)
-        else
-          name = name_or_options
-        end
-
+        name, options = normalize_table_options(name_or_options, options)
         admin.tables[name] = Table::Builder.build(options, &block)
       end
 
@@ -75,9 +73,21 @@ module Trestle
       def breadcrumb(label=nil, path=nil, &block)
         if block_given?
           @admin.breadcrumb = block
-        else
+        elsif label
           @admin.breadcrumb = -> { Breadcrumb.new(label, path) }
+        else
+          @admin.breadcrumb = -> { false }
         end
+      end
+
+    protected
+      def normalize_table_options(name, options)
+        if name.is_a?(Hash)
+          # Default index table
+          name, options = :index, name
+        end
+
+        [name, options]
       end
     end
   end

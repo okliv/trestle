@@ -99,19 +99,48 @@ module Trestle
         @actions ||= (readonly? ? READONLY_ACTIONS : RESOURCE_ACTIONS).dup
       end
 
+      def root_action
+        singular? ? :show : :index
+      end
+
       def readonly?
         options[:readonly]
       end
 
-      def default_breadcrumb
-        Breadcrumb.new(I18n.t("admin.breadcrumbs.#{admin_name}", default: model_name.plural.titleize), path)
+      def singular?
+        options[:singular]
+      end
+
+      def translate(key, options={})
+        super(key, options.merge({
+          model_name:            model_name.titleize,
+          lowercase_model_name:  model_name.downcase,
+          pluralized_model_name: model_name.plural.titleize
+        }))
+      end
+      alias t translate
+
+      def instance_path(instance, options={})
+        action = options.fetch(:action) { :show }
+        options = options.merge(id: to_param(instance)) unless singular?
+
+        path(action, options)
       end
 
       def routes
         admin = self
 
+        resource_method  = singular? ? :resource : :resources
+        resource_name    = admin_name
+        resource_options = {
+          controller: controller_namespace,
+          as:         route_name,
+          path:       options[:path],
+          except:     (RESOURCE_ACTIONS - actions)
+        }
+
         Proc.new do
-          resources admin.admin_name, controller: admin.controller_namespace, as: admin.route_name, path: admin.options[:path], except: (RESOURCE_ACTIONS - admin.actions) do
+          public_send(resource_method, resource_name, resource_options) do
             instance_exec(&admin.additional_routes) if admin.additional_routes
           end
         end
@@ -123,6 +152,12 @@ module Trestle
 
       def build(&block)
         Resource::Builder.build(self, &block)
+      end
+
+      def validate!
+        if singular? && find_instance_block.nil?
+          raise NotImplementedError, "Singular resources must define an instance block."
+        end
       end
 
     private

@@ -1,19 +1,18 @@
 require 'spec_helper'
 
-describe Trestle::Resource do
+describe Trestle::Resource, remove_const: true do
   before(:each) do
     class Test; end
-    class TestAdmin < Trestle::Resource; end
   end
 
-  after(:each) do
-    Object.send(:remove_const, :TestAdmin)
-    Object.send(:remove_const, :Test) if defined?(Test)
+  subject!(:admin) { Trestle.resource(:tests) }
+
+  before(:each) do
+    Rails.application.reload_routes!
   end
 
-  subject(:admin) { TestAdmin }
-
-  it "is a subclass of Admin" do
+  it "is a subclass of Resource and Admin" do
+    expect(admin).to be < Trestle::Resource
     expect(admin).to be < Trestle::Admin
   end
 
@@ -22,8 +21,8 @@ describe Trestle::Resource do
   end
 
   it "raises an exception if the inferred model does not exist" do
-    Object.send(:remove_const, :Test) if defined?(Test)
-    expect { admin.model }.to raise_exception(NameError, "Unable to find model Test. Specify a different model using Trestle.resource(:test, model: MyModel)")
+    Object.send(:remove_const, :Test)
+    expect { admin.model }.to raise_exception(NameError, "Unable to find model Test. Specify a different model using Trestle.resource(:tests, model: MyModel)")
   end
 
   it "allows the model to be specified manually via options" do
@@ -38,43 +37,22 @@ describe Trestle::Resource do
 
   it "has a breadcrumb trail" do
     expect(I18n).to receive(:t).with("admin.breadcrumbs.home", default: "Home").and_return("Home")
-    expect(I18n).to receive(:t).with("admin.breadcrumbs.test", default: "Tests").and_return("Tests")
+    expect(I18n).to receive(:t).with("admin.breadcrumbs.tests", default: "Tests").and_return("Tests")
 
     trail = Trestle::Breadcrumb::Trail.new([
       Trestle::Breadcrumb.new("Home", "/admin"),
-      Trestle::Breadcrumb.new("Tests", "/admin/test")
+      Trestle::Breadcrumb.new("Tests", "/admin/tests")
     ])
 
     expect(admin.breadcrumbs).to eq(trail)
   end
 
-  context "scoped within a module" do
-    before(:each) do
-      module Scoped
-        class Test; end
-        class TestAdmin < Trestle::Resource; end
-      end
-    end
-
-    after(:each) do
-      Scoped.send(:remove_const, :TestAdmin)
-    end
-
-    subject(:admin) { Scoped::TestAdmin }
-
-    it "infers the model from the module and admin name" do
-      expect(admin.model).to eq(Scoped::Test)
-    end
-  end
-
   it "has a default collection block" do
-    class Test; end
     expect(Test).to receive(:all).and_return([1, 2, 3])
     expect(admin.collection).to eq([1, 2, 3])
   end
 
   it "has a default instance block" do
-    class Test; end
     expect(Test).to receive(:find).with(123).and_return(1)
     expect(admin.find_instance(id: 123)).to eq(1)
   end
@@ -89,6 +67,31 @@ describe Trestle::Resource do
   it "has a default (identity) decorator" do
     collection = double
     expect(admin.decorate_collection(collection)).to eq(collection)
+  end
+
+  describe "#instance_path" do
+    let(:instance) { double(id: "123") }
+
+    it "returns the path for the given instance" do
+      Rails.application.reload_routes!
+
+      expect(admin.instance_path(instance)).to eq("/admin/tests/123")
+      expect(admin.instance_path(instance, action: :edit)).to eq("/admin/tests/123/edit")
+      expect(admin.instance_path(instance, action: :edit, foo: :bar)).to eq("/admin/tests/123/edit?foo=bar")
+    end
+  end
+
+  describe "#translate" do
+    it "translates the given key using sensible defaults, passing in the model name" do
+      expect(I18n).to receive(:t).with(:"admin.tests.titles.index", {
+        default: [:"admin.titles.index", "Index"],
+        model_name: "Test",
+        lowercase_model_name: "test",
+        pluralized_model_name: "Tests"
+      }).and_return("Tests Index")
+
+      expect(admin.translate("titles.index", default: "Index")).to eq("Tests Index")
+    end
   end
 
   describe "#prepare_collection" do
@@ -116,11 +119,51 @@ describe Trestle::Resource do
 
       context "when a column sort for the field exists" do
         it "reorders the collection using the column sort" do
-          TestAdmin.column_sorts[:field] = ->(collection, order) { collection.order(field: order) }
+          TestsAdmin.column_sorts[:field] = ->(collection, order) { collection.order(field: order) }
 
           expect(collection).to receive(:order).with(field: :desc).and_return(sorted_collection)
           expect(admin.prepare_collection(sort: "field", order: "desc")).to eq(sorted_collection)
         end
+      end
+    end
+  end
+
+  context "scoped within a module" do
+    subject!(:admin) do
+      module Scoped
+        class Test; end
+      end
+
+      Trestle.resource(:tests, scope: Scoped)
+    end
+
+    it "infers the model from the module and admin name" do
+      expect(admin.model).to eq(Scoped::Test)
+    end
+  end
+
+  context "a singular resource" do
+    subject!(:admin) do
+      Trestle.resource(:singular, singular: true) do
+        instance {}
+      end
+    end
+
+    it "is singular" do
+      expect(admin).to be_singular
+    end
+
+    it "returns the show action path as the default path" do
+      expect(admin.path).to eq("/admin/singular")
+    end
+
+    context "without an instance block" do
+      subject!(:admin) { nil }
+
+      it "raises a NotImplementedError exception" do
+        expect {
+          Trestle.resource(:singular, singular: true)
+        }.to raise_error(NotImplementedError, "Singular resources must define an instance block.")
       end
     end
   end

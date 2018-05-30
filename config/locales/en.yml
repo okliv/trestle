@@ -4,19 +4,6 @@ en:
     footer: "Powered by Trestle"
     version: "Version"
 
-    flash:
-      success:
-        title: "Success!"
-        create: "The %{lowercase_model_name} was successfully created."
-        update: "The %{lowercase_model_name} was successfully updated."
-        destroy: "The %{lowercase_model_name} was successfully deleted."
-
-      failure:
-        title: "Warning!"
-        create: "Please correct the errors below."
-        update: "Please correct the errors below."
-        destroy: "Could not delete %{lowercase_model_name}."
-
     helpers:
       page_entries_info:
         one_page:
@@ -34,8 +21,17 @@ en:
       no_template: "To customize this template, please create <code>%{path}</code>."
       no_form: "Please define a form block or create a <code>_form.html</code> partial."
 
+    ui:
+      toggle_navigation: "Toggle navigation"
+      toggle_sidebar: "Toggle sidebar"
+
     dialog:
       error: "The request could not be completed."
+
+    confirmation:
+      title: "Are you sure?"
+      delete: "Delete"
+      cancel: "Cancel"
 
   admin:
     titles:
@@ -52,6 +48,34 @@ en:
     breadcrumbs:
       home: "Home"
 
+    flash:
+      create:
+        success:
+          title: "Success!"
+          message: "The %{lowercase_model_name} was successfully created."
+
+        failure:
+          title: "Warning!"
+          message: "Please correct the errors below."
+
+      update:
+        success:
+          title: "Success!"
+          message: "The %{lowercase_model_name} was successfully updated."
+
+        failure:
+          title: "Warning!"
+          message: "Please correct the errors below."
+
+      destroy:
+        success:
+          title: "Success!"
+          message: "The %{lowercase_model_name} was successfully deleted."
+
+        failure:
+          title: "Warning!"
+          message: "Could not delete %{lowercase_model_name}."
+
     table:
       headers:
         id: "ID"
@@ -59,15 +83,6 @@ en:
     form:
       select:
         prompt: "- Select %{attribute_name} -"
-
-    confirmation:
-      title: "Are you sure?"
-      delete: "Delete"
-      cancel: "Cancel"
-
-    ui:
-      toggle_navigation: "Toggle navigation"
-      toggle_sidebar: "Toggle sidebar"
 
     format:
       blank: "None"

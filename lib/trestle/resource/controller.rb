@@ -1,6 +1,9 @@
 module Trestle
   class Resource
     class Controller < Admin::Controller
+      before_action :load_collection, only: [:index]
+      before_action :load_instance, only: [:show, :edit, :update, :destroy]
+
       def index
         respond_to do |format|
           format.html
@@ -10,7 +13,7 @@ module Trestle
       end
 
       def new
-        self.instance = admin.build_instance({}, params)
+        self.instance = admin.build_instance(params.key?(admin.parameter_name) ? permitted_params : {}, params)
 
         respond_to do |format|
           format.html
@@ -25,16 +28,16 @@ module Trestle
         if admin.save_instance(instance)
           respond_to do |format|
             format.html do
-              flash[:message] = flash_message("success.create", default: "The %{lowercase_model_name} was successfully created.")
-              redirect_to_return_location(:create, instance, default: admin.path(:show, id: admin.to_param(instance)))
+              flash[:message] = flash_message("create.success", title: "Success!", message: "The %{lowercase_model_name} was successfully created.")
+              redirect_to_return_location(:create, instance, default: admin.instance_path(instance))
             end
-            format.json { render json: instance, status: :created, location: { action: :show, id: admin.to_param(instance) } }
+            format.json { render json: instance, status: :created, location: admin.instance_path(instance) }
             format.js
           end
         else
           respond_to do |format|
             format.html do
-              flash.now[:error] = flash_message("failure.create", default: "Please correct the errors below.")
+              flash.now[:error] = flash_message("create.failure", title: "Warning!", message: "Please correct the errors below.")
               render "new", status: :unprocessable_entity
             end
             format.json { render json: instance.errors, status: :unprocessable_entity }
@@ -44,10 +47,18 @@ module Trestle
       end
 
       def show
-        respond_to do |format|
-          format.html
-          format.json { render json: instance }
-          format.js
+        if admin.singular? && instance.nil?
+          respond_to do |format|
+            format.html { redirect_to action: :new }
+            format.json { head :not_found }
+            format.js
+          end
+        else
+          respond_to do |format|
+            format.html
+            format.json { render json: instance }
+            format.js
+          end
         end
       end
 
@@ -60,8 +71,8 @@ module Trestle
         if admin.save_instance(instance)
           respond_to do |format|
             format.html do
-              flash[:message] = flash_message("success.update", default: "The %{lowercase_model_name} was successfully updated.")
-              redirect_to_return_location(:update, instance, default: admin.path(:show, id: admin.to_param(instance)))
+              flash[:message] = flash_message("update.success", title: "Success!", message: "The %{lowercase_model_name} was successfully updated.")
+              redirect_to_return_location(:update, instance, default: admin.instance_path(instance))
             end
             format.json { render json: instance, status: :ok }
             format.js
@@ -69,7 +80,7 @@ module Trestle
         else
           respond_to do |format|
             format.html do
-              flash.now[:error] = flash_message("failure.update", default: "Please correct the errors below.")
+              flash.now[:error] = flash_message("update.failure", title: "Warning!", message: "Please correct the errors below.")
               render "show", status: :unprocessable_entity
             end
             format.json { render json: instance.errors, status: :unprocessable_entity }
@@ -84,13 +95,13 @@ module Trestle
         respond_to do |format|
           format.html do
             if success
-              flash[:message] = flash_message("success.destroy", default: "The %{lowercase_model_name} was successfully deleted.")
+              flash[:message] = flash_message("destroy.success", title: "Success!", message: "The %{lowercase_model_name} was successfully deleted.")
               redirect_to_return_location(:destroy, instance, default: admin.path(:index))
             else
-              flash[:error] = flash_message("failure.destroy", default: "Could not delete %{lowercase_model_name}.")
+              flash[:error] = flash_message("destroy.failure", title: "Warning!", message: "Could not delete %{lowercase_model_name}.")
 
               if self.instance = admin.find_instance(params)
-                redirect_to_return_location(:update, instance, default: admin.path(:show, id: admin.to_param(instance)))
+                redirect_to_return_location(:update, instance, default: admin.instance_path(instance))
               else
                 redirect_to_return_location(:destroy, instance, default: admin.path(:index))
               end
@@ -101,20 +112,23 @@ module Trestle
         end
       end
 
-      protected
-      def instance
-        @instance ||= admin.find_instance(params)
+    protected
+      def load_instance
+        self.instance = admin.find_instance(params)
       end
 
-      def collection
-        @collection ||= admin.prepare_collection(params)
+      def load_collection
+        self.collection = admin.prepare_collection(params)
       end
 
-      attr_writer :instance, :collection
+      attr_accessor :instance, :collection
       helper_method :instance, :collection
 
-      def flash_message(type, options = {})
-        t("trestle.flash.#{type}", options.merge(model_name: admin.model_name, lowercase_model_name: admin.model_name.downcase))
+      def flash_message(type, title:, message:)
+        {
+          title:   admin.t("flash.#{type}.title", default: title),
+          message: admin.t("flash.#{type}.message", default: message)
+        }
       end
 
       def permitted_params

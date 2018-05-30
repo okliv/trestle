@@ -133,10 +133,10 @@ module Trestle
       #
       # Returns a Kaminari-compatible scope corresponding to a single page.
       def paginate(collection, params)
-        collection = Kaminari.paginate_array(collection.to_a) unless collection.respond_to?(:page)
+        collection = Kaminari.paginate_array(collection.to_a) unless collection.respond_to?(Kaminari.config.page_method_name)
         per_page = admin.pagination_options[:per]
 
-        collection.page(params[:page]).per(per_page)
+        collection.public_send(Kaminari.config.page_method_name, params[:page]).per(per_page)
       end
 
       # Filters the submitted form parameters and returns a whitelisted attributes 'hash'
@@ -149,7 +149,7 @@ module Trestle
       #
       # Returns the permitted set of parameters as a ActionController::Parameters object.
       def permitted_params(params)
-        params.require(admin.admin_name.singularize).permit!
+        params.require(admin.parameter_name).permit!
       end
 
       # Produces a human-readable name for a given attribute, applying I18n where appropriate.
